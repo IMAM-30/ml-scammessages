@@ -1,0 +1,12 @@
+.DS_Store
+__pycache__/
+*.py[cod]
+
+.venv/
+.ipynb_checkpoints/
+
+friday.md
+Untitled36.original_backup.ipynb
+
+*.pth
+*.zip

@@ -1,0 +1,40 @@
+{
+  "model_type": "hybrid",
+  "artifact_dir": "hasil/scam_hybrid_indobert_bilstm",
+  "device": "cpu",
+  "manual_examples": [
+    {
+      "name": "scam_bonus",
+      "raw_text": "Selamat Anda memenangkan hadiah 100 juta. Transfer biaya admin ke rekening 1234 sekarang.",
+      "clean_text": "selamat anda memenangkan hadiah 100 juta transfer biaya administrasi ke rekening 1234 sekarang",
+      "prediction": "SCAM/SPAM",
+      "label_id": 1,
+      "prob_scam": 0.9559469819068909,
+      "threshold": 0.6800000000000004,
+      "risk_level": "tinggi",
+      "model": "HybridIndoBertBiLSTM"
+    },
+    {
+      "name": "normal_kampus",
+      "raw_text": "Besok kita kumpul jam 10 di kampus untuk diskusi tugas akhir.",
+      "clean_text": "besok kita kumpul jam 10 di kampus untuk diskusi tugas akhir",
+      "prediction": "NORMAL/HAM",
+      "label_id": 0,
+      "prob_scam": 0.0211253110319376,
+      "threshold": 0.6800000000000004,
+      "risk_level": "sangat rendah",
+      "model": "HybridIndoBertBiLSTM"
+    }
+  ],
+  "test_count": 92,
+  "test_split_metrics": {
+    "accuracy": 0.9782608695652174,
+    "precision": 0.9782608695652174,
+    "recall": 0.9782608695652174,
+    "f1": 0.9782608695652174,
+    "tp": 45,
+    "tn": 45,
+    "fp": 1,
+    "fn": 1
+  }
+}

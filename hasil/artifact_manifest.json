@@ -1,0 +1,143 @@
+{
+  "artifact_zip": "hasil/scam_hybrid_indobert_bilstm.zip",
+  "zip_size_bytes": 938582336,
+  "zip_sha256": "e7d384f653b0653773601a2dda22e5d0d1bc8388c8d2f57d7aff6954e3d2d5f1",
+  "extracted_root": "hasil/scam_hybrid_indobert_bilstm",
+  "zip_entries": [
+    {
+      "path": "tokenizer/",
+      "size_bytes": 0
+    },
+    {
+      "path": "train_split.csv",
+      "size_bytes": 199796
+    },
+    {
+      "path": "all_training_results.csv",
+      "size_bytes": 1903
+    },
+    {
+      "path": "indobert_classifier_scam_baseline.pth",
+      "size_bytes": 497843571
+    },
+    {
+      "path": "validation_split.csv",
+      "size_bytes": 29762
+    },
+    {
+      "path": "test_split.csv",
+      "size_bytes": 21003
+    },
+    {
+      "path": "test_summary.csv",
+      "size_bytes": 394
+    },
+    {
+      "path": "preprocessing_config.json",
+      "size_bytes": 3012
+    },
+    {
+      "path": "hybrid_indobert_bilstm_scam_final.pth",
+      "size_bytes": 513084795
+    },
+    {
+      "path": "tokenizer/tokenizer.json",
+      "size_bytes": 709028
+    },
+    {
+      "path": "tokenizer/tokenizer_config.json",
+      "size_bytes": 351
+    }
+  ],
+  "extracted_files": [
+    {
+      "path": "all_training_results.csv",
+      "size_bytes": 1903
+    },
+    {
+      "path": "hybrid_indobert_bilstm_scam_final.pth",
+      "size_bytes": 513084795
+    },
+    {
+      "path": "indobert_classifier_scam_baseline.pth",
+      "size_bytes": 497843571
+    },
+    {
+      "path": "preprocessing_config.json",
+      "size_bytes": 3012
+    },
+    {
+      "path": "test_split.csv",
+      "size_bytes": 21003
+    },
+    {
+      "path": "test_summary.csv",
+      "size_bytes": 394
+    },
+    {
+      "path": "tokenizer/tokenizer.json",
+      "size_bytes": 709028
+    },
+    {
+      "path": "tokenizer/tokenizer_config.json",
+      "size_bytes": 351
+    },
+    {
+      "path": "train_split.csv",
+      "size_bytes": 199796
+    },
+    {
+      "path": "validation_split.csv",
+      "size_bytes": 29762
+    }
+  ],
+  "dataset": {
+    "source_path_in_kaggle": "/kaggle/input/notebooks/gevabriel/indonesian-sms-spam-detection-using-indobert/indo_spam.csv",
+    "text_column": "Pesan",
+    "label_column": "Kategori",
+    "label_mapping": {
+      "normal_ham": 0,
+      "scam_spam": 1
+    },
+    "split_counts": {
+      "train": 913,
+      "validation": 138,
+      "test": 92
+    },
+    "test_label_counts": {
+      "0": 46,
+      "1": 46
+    }
+  },
+  "config": {
+    "project_title": "Deteksi Konten Penipuan (Scam) Berbahasa Indonesia",
+    "model_name": "indobenchmark/indobert-base-p2",
+    "seed": 42,
+    "max_length": 128,
+    "batch_size": 16,
+    "epochs_indobert": 6,
+    "epochs_hybrid": 10,
+    "early_stopping_patience": 3,
+    "early_stopping_min_delta": 0.0001,
+    "learning_rate": 2e-05,
+    "weight_decay": 0.01,
+    "warmup_ratio": 0.1,
+    "dropout": 0.3,
+    "lstm_hidden_size": 256,
+    "lstm_layers": 2,
+    "freeze_bert_in_hybrid": false,
+    "use_amp": true,
+    "keep_numbers": true,
+    "run_svm_baseline": true,
+    "run_indobert_baseline": true,
+    "run_hybrid_model": true,
+    "train_size": 0.8,
+    "val_size": 0.12,
+    "test_size": 0.08
+  },
+  "local_dependency_available": {
+    "torch": false,
+    "transformers": false,
+    "streamlit": false
+  }
+}

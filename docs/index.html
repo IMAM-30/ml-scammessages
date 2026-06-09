@@ -2,506 +2,2273 @@
 <html lang="id">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Indonesian Scam Detector</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <title>Modul Pembelajaran Deteksi Scam Bahasa Indonesia</title>
+  <meta name="description" content="Modul pembelajaran proyek deteksi pesan scam berbahasa Indonesia dengan TF-IDF, SVM, IndoBERT, Hybrid IndoBERT BiLSTM, PyTorch inference, dan Streamlit UI.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23111827'/%3E%3Ctext x='32' y='39' text-anchor='middle' font-family='Arial,sans-serif' font-size='20' font-weight='800' fill='white'%3EML%3C/text%3E%3C/svg%3E">
   <style>
     :root {
-      --bg: #f5f5f7;
+      color-scheme: light;
+      --bg: #f3f7f2;
+      --paper: #fffefa;
       --panel: #ffffff;
-      --ink: #1d1d1f;
-      --muted: #6e6e73;
-      --line: #d2d2d7;
-      --accent: #0071e3;
-      --accent-soft: #e8f2ff;
-      --ok: #16794c;
-      --ok-soft: #eefaf4;
-      --warn: #a15c00;
-      --warn-soft: #fff7ea;
-      --bad: #bc1f2d;
-      --bad-soft: #fff1f2;
-      --shadow: 0 18px 45px rgba(0, 0, 0, 0.07);
+      --panel-soft: #f8fbf7;
+      --ink: #17211b;
+      --muted: #5f6f65;
+      --line: #d8e2d5;
+      --line-soft: #e8eee5;
+      --accent: #147d74;
+      --accent-strong: #0c5f58;
+      --accent-soft: #e5f4f1;
+      --green: #247852;
+      --green-soft: #edf8f1;
+      --amber: #9b5a16;
+      --amber-soft: #fff4e2;
+      --red: #b42318;
+      --red-soft: #fff1f2;
+      --purple: #5b5bd6;
+      --purple-soft: #f0f0ff;
+      --code-bg: #12211c;
+      --code-line: #274339;
+      --code-text: #edf7f1;
+      --shadow: 0 18px 42px rgba(27, 51, 35, 0.09);
+      --shadow-soft: 0 8px 22px rgba(27, 51, 35, 0.055);
+      --radius: 8px;
+      --max: 1220px;
+      --sidebar: 300px;
     }
 
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      scroll-padding-top: 86px;
+      width: 100%;
+      max-width: 100%;
+      overflow-x: hidden;
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+    }
 
     body {
       margin: 0;
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: var(--bg);
+      width: 100%;
+      max-width: 100%;
+      overflow-x: hidden;
+      background:
+        linear-gradient(180deg, var(--paper) 0, #f9fbf6 280px, var(--bg) 640px),
+        linear-gradient(90deg, rgba(20, 125, 116, 0.045) 1px, transparent 1px),
+        var(--bg);
+      background-size: auto, 42px 42px, auto;
       color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
       letter-spacing: 0;
+      line-height: 1.6;
+      text-rendering: optimizeLegibility;
+      overscroll-behavior-x: none;
     }
 
-    a { color: inherit; }
-
-    .shell {
-      min-height: 100vh;
-      display: grid;
-      grid-template-columns: 260px 1fr;
+    a {
+      color: inherit;
     }
 
-    aside {
-      border-right: 1px solid var(--line);
-      background: #101827;
-      color: #f8fafc;
-      padding: 22px 18px;
+    code,
+    pre,
+    kbd {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    }
+
+    .mobile-bar {
+      display: flex;
       position: sticky;
       top: 0;
-      height: 100vh;
+      z-index: 80;
+      min-height: 62px;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255, 254, 250, 0.92);
+      backdrop-filter: blur(18px);
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .mobile-title {
+      font-weight: 800;
+      line-height: 1.2;
+      font-size: 0.96rem;
+    }
+
+    .menu-toggle {
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--ink);
+      border-radius: var(--radius);
+      min-width: 92px;
+      min-height: 40px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .layout {
+      display: block;
+      min-height: 100vh;
+      width: 100%;
+      max-width: 100%;
+    }
+
+    .sidebar {
+      display: none;
+      position: fixed;
+      top: 76px;
+      left: 18px;
+      bottom: 18px;
+      width: min(var(--sidebar), calc(100vw - 36px));
+      height: auto;
+      z-index: 90;
+      overflow: auto;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: var(--radius);
+      background:
+        linear-gradient(180deg, #14231c 0%, #172b22 48%, #101d17 100%);
+      color: #f8fbf7;
+      padding: 24px 18px;
+      box-shadow: 0 24px 70px rgba(16, 29, 23, 0.38);
+      scrollbar-color: rgba(255, 255, 255, 0.24) transparent;
+    }
+
+    body.menu-open {
+      overflow: hidden;
+    }
+
+    body.menu-open::before {
+      content: "";
+      position: fixed;
+      inset: 62px 0 0 0;
+      z-index: 70;
+      background: rgba(20, 35, 28, 0.38);
+      backdrop-filter: blur(4px);
+    }
+
+    body.menu-open .sidebar {
+      display: block;
+    }
+
+    .nav-close {
+      width: 100%;
+      min-height: 38px;
+      margin: -8px 0 18px;
+      border: 1px solid rgba(237, 248, 241, 0.18);
+      border-radius: var(--radius);
+      background: rgba(237, 248, 241, 0.08);
+      color: #eef8f1;
+      font-weight: 850;
+      cursor: pointer;
+    }
+
+    .nav-close:hover,
+    .nav-close:focus-visible {
+      background: rgba(237, 248, 241, 0.14);
+      outline: none;
     }
 
     .brand {
-      display: flex;
-      gap: 10px;
+      display: grid;
+      grid-template-columns: 42px 1fr;
+      gap: 11px;
       align-items: center;
-      font-weight: 800;
-      font-size: 1rem;
-      margin-bottom: 26px;
+      margin-bottom: 24px;
+      padding: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.045);
     }
 
-    .mark {
-      width: 34px;
-      height: 34px;
-      border-radius: 8px;
+    .brand-mark {
+      width: 42px;
+      height: 42px;
+      border-radius: var(--radius);
+      background: #edf8f1;
+      color: #143526;
       display: grid;
       place-items: center;
-      background: #f8fafc;
-      color: #101827;
       font-weight: 900;
     }
 
+    .brand-title {
+      margin: 0;
+      font-size: 0.98rem;
+      font-weight: 850;
+      line-height: 1.22;
+    }
+
+    .brand-subtitle {
+      margin: 2px 0 0;
+      color: #b6c8bb;
+      font-size: 0.78rem;
+    }
+
     .nav-title {
-      font-size: 0.74rem;
-      color: #98a2b3;
+      margin: 20px 0 8px;
+      color: #9fb5a8;
       text-transform: uppercase;
-      font-weight: 700;
-      margin: 24px 0 9px;
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+    }
+
+    .nav {
+      display: grid;
+      gap: 5px;
     }
 
     .nav a {
+      min-height: 36px;
       display: flex;
       align-items: center;
-      gap: 9px;
-      min-height: 36px;
-      color: #d0d5dd;
+      border-radius: var(--radius);
+      padding: 8px 11px;
+      color: #d8e6dd;
       text-decoration: none;
-      border-radius: 8px;
-      padding: 8px 10px;
-      font-size: 0.92rem;
+      font-size: 0.9rem;
+      line-height: 1.25;
+      border: 1px solid transparent;
     }
 
-    .nav a:hover, .nav a.active {
-      background: rgba(255,255,255,0.08);
+    .nav a:hover,
+    .nav a.active {
+      background: rgba(237, 248, 241, 0.12);
+      border-color: rgba(237, 248, 241, 0.12);
       color: #ffffff;
     }
 
+    .side-note {
+      margin-top: 22px;
+      padding: 13px;
+      border: 1px solid rgba(237, 248, 241, 0.14);
+      border-radius: var(--radius);
+      background: rgba(237, 248, 241, 0.07);
+      color: #d8e6dd;
+      font-size: 0.82rem;
+      line-height: 1.5;
+    }
+
     main {
-      padding: 22px;
-      max-width: 1220px;
       width: 100%;
+      max-width: var(--max);
       margin: 0 auto;
+      padding: 28px;
     }
 
     .hero {
-      min-height: 360px;
       display: grid;
-      grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.95fr);
+      grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
+      gap: 20px;
       align-items: stretch;
+      min-height: 438px;
+      margin-bottom: 20px;
+    }
+
+    .hero-copy,
+    .hero-panel,
+    .section,
+    .notice {
       border: 1px solid var(--line);
-      border-radius: 8px;
-      background: var(--panel);
-      overflow: hidden;
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.9);
       box-shadow: var(--shadow);
     }
 
     .hero-copy {
-      padding: 34px;
+      padding: clamp(26px, 4vw, 44px);
       display: flex;
       flex-direction: column;
       justify-content: center;
+      background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(237, 248, 241, 0.9)),
+        #ffffff;
+    }
+
+    .hero-panel {
+      padding: 24px;
+      background:
+        linear-gradient(160deg, #14231c 0%, #17382e 58%, #10211b 100%);
+      color: #f8fafc;
+      overflow: hidden;
+      display: grid;
+      align-content: center;
+      gap: 14px;
+      box-shadow: 0 24px 60px rgba(27, 51, 35, 0.18);
     }
 
     .eyebrow {
       color: var(--accent);
       font-size: 0.82rem;
-      font-weight: 800;
+      font-weight: 850;
       text-transform: uppercase;
       margin-bottom: 10px;
+      letter-spacing: 0.06em;
+    }
+
+    h1,
+    h2,
+    h3,
+    h4 {
+      letter-spacing: 0;
+      color: var(--ink);
     }
 
     h1 {
-      font-size: clamp(2rem, 4vw, 4.25rem);
-      line-height: 1.02;
       margin: 0 0 14px;
-      max-width: 820px;
+      max-width: 860px;
+      font-size: clamp(2.35rem, 5.8vw, 5.4rem);
+      line-height: 1;
+      font-weight: 880;
     }
 
     .lead {
+      max-width: 760px;
+      margin: 0 0 20px;
       color: var(--muted);
-      font-size: 1.05rem;
-      line-height: 1.65;
-      max-width: 680px;
-      margin: 0 0 24px;
+      font-size: 1.04rem;
+      line-height: 1.7;
     }
 
-    .actions {
+    .chips {
       display: flex;
       flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 6px;
+      gap: 8px;
+      margin-top: 8px;
     }
 
-    .button {
-      min-height: 42px;
-      border-radius: 8px;
-      border: 1px solid var(--line);
-      background: var(--panel);
-      color: var(--ink);
-      padding: 10px 14px;
-      font-weight: 750;
-      text-decoration: none;
+    .chip {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
+      min-height: 32px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.82);
+      color: var(--ink);
+      padding: 6px 11px;
+      font-weight: 750;
+      font-size: 0.83rem;
+      text-decoration: none;
     }
 
-    .button.primary {
-      background: var(--accent);
-      color: #ffffff;
-      border-color: var(--accent);
+    .chip.blue {
+      border-color: #b6d9ff;
+      background: var(--accent-soft);
+      color: var(--accent-strong);
     }
 
-    .console {
-      background: #0b1220;
-      color: #e4e7ec;
-      padding: 24px;
+    .chip.green {
+      border-color: #b6e7cf;
+      background: var(--green-soft);
+      color: var(--green);
+    }
+
+    .chip.amber {
+      border-color: #efd3a3;
+      background: var(--amber-soft);
+      color: var(--amber);
+    }
+
+    .terminal {
+      border: 1px solid rgba(237, 248, 241, 0.14);
+      border-radius: var(--radius);
+      background: rgba(12, 28, 22, 0.86);
+      overflow: hidden;
+    }
+
+    .terminal-head {
       display: flex;
-      flex-direction: column;
-      justify-content: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(237, 248, 241, 0.12);
+      color: #adc5b6;
+      font-size: 0.82rem;
+    }
+
+    .terminal-body {
+      padding: 14px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .terminal-line {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+      padding-bottom: 9px;
+      color: #e5f0e9;
+      font-size: 0.88rem;
+    }
+
+    .terminal-line:last-child {
+      border-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      white-space: nowrap;
+      min-height: 24px;
+      border-radius: 999px;
+      padding: 4px 8px;
+      font-size: 0.76rem;
+      font-weight: 850;
+    }
+
+    .pill.ok {
+      color: #9ee4bf;
+      background: rgba(36, 120, 82, 0.2);
+    }
+
+    .pill.warn {
+      color: #ffd18a;
+      background: rgba(155, 90, 22, 0.22);
+    }
+
+    .pill.blue {
+      color: #9bd6ff;
+      background: rgba(35, 103, 170, 0.2);
+    }
+
+    .section {
+      margin-top: 20px;
+      padding: clamp(20px, 3vw, 30px);
+      box-shadow: var(--shadow-soft);
+      scroll-margin-top: 88px;
+    }
+
+    .section-header {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 18px;
+      align-items: end;
+      margin-bottom: 20px;
+    }
+
+    .section h2 {
+      margin: 0;
+      font-size: clamp(1.45rem, 3vw, 2rem);
+      line-height: 1.15;
+    }
+
+    .section-intro {
+      margin: 8px 0 0;
+      max-width: 820px;
+      color: var(--muted);
+    }
+
+    .mini-label {
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .grid {
+      display: grid;
       gap: 14px;
       min-width: 0;
     }
 
-    .console-top {
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      color: #98a2b3;
-      font-size: 0.85rem;
+    .grid.two {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    .terminal {
-      border: 1px solid #273449;
-      border-radius: 8px;
-      background: #111a2c;
-      padding: 16px;
-      min-height: 210px;
-      overflow: hidden;
-    }
-
-    .line {
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-      padding: 9px 0;
-      color: #d0d5dd;
-      font-size: 0.92rem;
-    }
-
-    .line:last-child { border-bottom: 0; }
-
-    .tag {
-      border-radius: 999px;
-      padding: 4px 8px;
-      font-size: 0.78rem;
-      font-weight: 800;
-      white-space: nowrap;
-    }
-
-    .tag.ok { background: rgba(22,121,76,0.18); color: #7ee0af; }
-    .tag.warn { background: rgba(161,92,0,0.18); color: #ffd18a; }
-    .tag.bad { background: rgba(188,31,45,0.18); color: #ff9aa5; }
-
-    .section {
-      margin-top: 22px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: var(--panel);
-      padding: 22px;
-    }
-
-    .section-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: end;
-      gap: 14px;
-      margin-bottom: 18px;
-    }
-
-    h2 {
-      margin: 0;
-      font-size: 1.45rem;
-    }
-
-    .muted { color: var(--muted); }
-
-    .metrics {
-      display: grid;
+    .grid.three {
       grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 14px;
     }
 
-    .metric {
+    .grid.four {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .card,
+    .metric,
+    .step,
+    .cell-card,
+    .flow-node,
+    .model-card {
       border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 16px;
-      background: #fbfcfe;
+      border-radius: var(--radius);
+      background: var(--panel-soft);
+      min-width: 0;
     }
 
-    .metric h3 {
-      margin: 0 0 12px;
+    .card {
+      padding: 17px;
+      box-shadow: 0 1px 0 rgba(27, 51, 35, 0.02);
+    }
+
+    .card h3,
+    .card h4,
+    .model-card h3,
+    .cell-card h3 {
+      margin: 0 0 8px;
       font-size: 1rem;
+      line-height: 1.3;
     }
 
-    .metric-value {
-      font-size: 2rem;
-      font-weight: 850;
-      margin-bottom: 10px;
-    }
-
-    .bar {
-      height: 10px;
-      border-radius: 999px;
-      background: #e4e9f2;
-      overflow: hidden;
-    }
-
-    .bar span {
-      display: block;
-      height: 100%;
-      background: var(--accent);
-      border-radius: inherit;
-    }
-
-    .detail {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 18px;
-      align-items: start;
-    }
-
-    .table {
-      width: 100%;
-      border-collapse: collapse;
-      overflow: hidden;
-      border: 1px solid var(--line);
-      border-radius: 8px;
+    .card p,
+    .model-card p,
+    .cell-card p {
+      margin: 0;
+      color: var(--muted);
       font-size: 0.94rem;
     }
 
-    .table th, .table td {
-      padding: 11px 12px;
-      text-align: left;
-      border-bottom: 1px solid var(--line);
+    .metric {
+      padding: 17px;
+      background: rgba(255, 255, 255, 0.92);
+      box-shadow: var(--shadow-soft);
     }
 
-    .table th {
-      background: #f0f3f8;
+    .metric-label {
+      color: var(--muted);
       font-size: 0.78rem;
+      font-weight: 800;
       text-transform: uppercase;
-      color: var(--muted);
+      letter-spacing: 0.05em;
     }
 
-    .table tr:last-child td { border-bottom: 0; }
-
-    .demo {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) 300px;
-      gap: 16px;
-      align-items: stretch;
-    }
-
-    textarea {
-      width: 100%;
-      min-height: 156px;
-      resize: vertical;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 14px;
-      font: inherit;
+    .metric-value {
+      margin-top: 4px;
       color: var(--ink);
-      background: #fbfcfe;
-      line-height: 1.5;
+      font-size: clamp(1.45rem, 3vw, 2.15rem);
+      line-height: 1;
+      font-weight: 880;
     }
 
-    .result-panel {
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: #fbfcfe;
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      gap: 10px;
-    }
-
-    .result-title {
-      font-size: 0.82rem;
+    .metric-desc {
+      margin-top: 8px;
       color: var(--muted);
-      font-weight: 750;
-      text-transform: uppercase;
-    }
-
-    .result-value {
-      font-size: 1.4rem;
-      font-weight: 850;
-    }
-
-    .note {
-      padding: 12px 14px;
-      border-radius: 8px;
-      border: 1px solid #f0c78c;
-      background: var(--warn-soft);
-      color: #653900;
-      line-height: 1.5;
-    }
-
-    .steps {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 12px;
-    }
-
-    .step {
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      padding: 14px;
-      background: #fbfcfe;
-    }
-
-    .step strong {
-      display: block;
-      margin-bottom: 6px;
-    }
-
-    footer {
-      color: var(--muted);
-      padding: 24px 0 6px;
       font-size: 0.9rem;
     }
 
-    @media (max-width: 980px) {
-      .shell { grid-template-columns: 1fr; }
-      aside {
-        position: static;
-        height: auto;
-        border-right: 0;
-        border-bottom: 1px solid var(--line);
-      }
-      .hero, .detail, .demo { grid-template-columns: 1fr; }
-      .metrics, .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .notice {
+      display: grid;
+      grid-template-columns: 44px 1fr;
+      gap: 14px;
+      align-items: start;
+      margin: 20px 0;
+      padding: 16px;
+      box-shadow: none;
+      background: var(--accent-soft);
+      border-color: #b9ded8;
     }
 
-    @media (max-width: 620px) {
-      main { padding: 14px; }
-      .hero-copy, .console, .section { padding: 18px; }
-      .metrics, .steps { grid-template-columns: 1fr; }
-      .section-header { display: block; }
-      .button { width: 100%; justify-content: center; }
+    .notice-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: var(--radius);
+      display: grid;
+      place-items: center;
+      background: #ffffff;
+      color: var(--accent-strong);
+      font-weight: 900;
+    }
+
+    .notice strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .notice p {
+      margin: 0;
+      color: #294942;
+    }
+
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .flow-node {
+      padding: 15px;
+      min-height: 154px;
+      position: relative;
+      background: rgba(255, 255, 255, 0.9);
+    }
+
+    .flow-node::after {
+      content: "->";
+      position: absolute;
+      right: -13px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      font-weight: 900;
+    }
+
+    .flow-node:last-child::after {
+      content: "";
+    }
+
+    .flow-number {
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      background: var(--accent-strong);
+      color: #ffffff;
+      font-weight: 850;
+      font-size: 0.8rem;
+      margin-bottom: 10px;
+    }
+
+    .flow-node h3 {
+      margin: 0 0 7px;
+      font-size: 0.98rem;
+      line-height: 1.25;
+    }
+
+    .flow-node p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #ffffff;
+      box-shadow: var(--shadow-soft);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 720px;
+      font-size: 0.92rem;
+    }
+
+    th,
+    td {
+      padding: 12px 13px;
+      text-align: left;
+      border-bottom: 1px solid var(--line-soft);
+      vertical-align: top;
+    }
+
+    th {
+      color: var(--ink);
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      background: #f1f7f1;
+    }
+
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .table-note {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+
+    .model-card {
+      padding: 16px;
+      background: rgba(255, 255, 255, 0.94);
+    }
+
+    .model-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: start;
+      margin-bottom: 10px;
+    }
+
+    .score {
+      color: var(--accent-strong);
+      background: var(--accent-soft);
+      border: 1px solid #b9ded8;
+      border-radius: 999px;
+      padding: 5px 9px;
+      font-weight: 850;
+      font-size: 0.78rem;
+      white-space: nowrap;
+    }
+
+    .bars {
+      display: grid;
+      gap: 9px;
+      margin-top: 12px;
+    }
+
+    .bar {
+      display: grid;
+      grid-template-columns: 86px 1fr 58px;
+      gap: 10px;
+      align-items: center;
+      font-size: 0.86rem;
+      color: var(--muted);
+    }
+
+    .bar-track {
+      height: 9px;
+      border-radius: 999px;
+      background: var(--line-soft);
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      width: var(--w);
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--accent), #2d7a45);
+    }
+
+    .cell-tools {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .search {
+      min-height: 42px;
+      flex: 1 1 280px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 10px 12px;
+      font: inherit;
+      background: #ffffff;
+      color: var(--ink);
+      box-shadow: inset 0 1px 0 rgba(27, 51, 35, 0.02);
+    }
+
+    .tool-button,
+    .copy-button {
+      min-height: 42px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #ffffff;
+      color: var(--ink);
+      padding: 9px 12px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: border-color 160ms ease, color 160ms ease, transform 160ms ease, background 160ms ease;
+    }
+
+    .tool-button:hover,
+    .copy-button:hover {
+      border-color: var(--accent);
+      color: var(--accent-strong);
+      transform: translateY(-1px);
+    }
+
+    .cell-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    details.cell-card {
+      background: rgba(255, 255, 255, 0.94);
+      overflow: hidden;
+    }
+
+    details.cell-card[open] {
+      border-color: #b9ded8;
+      box-shadow: 0 12px 28px rgba(20, 125, 116, 0.09);
+    }
+
+    summary {
+      cursor: pointer;
+      list-style: none;
+    }
+
+    summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .cell-summary {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: center;
+      padding: 15px;
+      transition: background 160ms ease;
+    }
+
+    details.cell-card:hover .cell-summary {
+      background: rgba(229, 244, 241, 0.45);
+    }
+
+    .cell-index {
+      min-width: 62px;
+      min-height: 34px;
+      display: inline-grid;
+      place-items: center;
+      border-radius: 999px;
+      background: #172b22;
+      color: #ffffff;
+      font-weight: 850;
+      font-size: 0.82rem;
+    }
+
+    .cell-title strong {
+      display: block;
+      color: var(--ink);
+      font-size: 0.98rem;
+      line-height: 1.3;
+    }
+
+    .cell-title span {
+      color: var(--muted);
+      font-size: 0.86rem;
+    }
+
+    .cell-status {
+      color: var(--accent-strong);
+      background: var(--accent-soft);
+      border: 1px solid #b9ded8;
+      border-radius: 999px;
+      padding: 5px 9px;
+      font-size: 0.76rem;
+      font-weight: 850;
+      white-space: nowrap;
+    }
+
+    .cell-body {
+      padding: 0 15px 16px 15px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .explain-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 0.96fr) minmax(280px, 1.04fr);
+      gap: 14px;
+      align-items: start;
+    }
+
+    .explain {
+      border: 1px solid var(--line-soft);
+      border-radius: var(--radius);
+      padding: 13px;
+      background: var(--panel-soft);
+    }
+
+    .explain h4 {
+      margin: 0 0 8px;
+      font-size: 0.92rem;
+    }
+
+    .explain ul,
+    .clean-list {
+      margin: 0;
+      padding-left: 18px;
+    }
+
+    .explain li,
+    .clean-list li {
+      margin: 6px 0;
+      color: var(--muted);
+    }
+
+    .code-card {
+      border: 1px solid var(--code-line);
+      border-radius: var(--radius);
+      background: var(--code-bg);
+      overflow: hidden;
+      box-shadow: 0 14px 28px rgba(18, 33, 28, 0.12);
+    }
+
+    .code-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--code-line);
+      color: #b8cabf;
+      font-size: 0.82rem;
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .copy-button {
+      min-height: 30px;
+      border-color: #315247;
+      background: #172b22;
+      color: #dcf4e8;
+      font-size: 0.76rem;
+      padding: 5px 8px;
+    }
+
+    pre {
+      margin: 0;
+      padding: 14px 15px;
+      overflow-x: auto;
+      color: var(--code-text);
+      font-size: 0.84rem;
+      line-height: 1.55;
+      scrollbar-color: #42685a transparent;
+    }
+
+    .code-card code {
+      color: inherit;
+    }
+
+    .line-map {
+      display: grid;
+      gap: 8px;
+    }
+
+    .line-row {
+      display: grid;
+      grid-template-columns: minmax(118px, 0.74fr) minmax(0, 1.26fr);
+      gap: 10px;
+      align-items: start;
+      border: 1px solid var(--line-soft);
+      border-radius: var(--radius);
+      padding: 11px;
+      background: rgba(255, 255, 255, 0.94);
+    }
+
+    .line-row code {
+      color: var(--accent-strong);
+      font-size: 0.82rem;
+      overflow-wrap: anywhere;
+    }
+
+    .line-row span {
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+
+    .callout {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 15px;
+      background: var(--panel-soft);
+    }
+
+    .callout.green {
+      border-color: #b7dfc7;
+      background: var(--green-soft);
+    }
+
+    .callout.amber {
+      border-color: #efd3a3;
+      background: var(--amber-soft);
+    }
+
+    .callout.red {
+      border-color: #f0b8bd;
+      background: var(--red-soft);
+    }
+
+    .callout strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .callout p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .timeline {
+      position: relative;
+      display: grid;
+      gap: 12px;
+    }
+
+    .timeline::before {
+      content: "";
+      position: absolute;
+      left: 16px;
+      top: 8px;
+      bottom: 8px;
+      width: 2px;
+      background: linear-gradient(180deg, var(--accent), var(--green));
+    }
+
+    .step {
+      position: relative;
+      display: grid;
+      grid-template-columns: 34px 1fr;
+      gap: 13px;
+      padding: 15px;
+      background: rgba(255, 255, 255, 0.94);
+    }
+
+    .step-dot {
+      width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      background: var(--accent-strong);
+      color: #ffffff;
+      display: grid;
+      place-items: center;
+      font-weight: 850;
+      z-index: 1;
+    }
+
+    .step h3 {
+      margin: 0 0 5px;
+      font-size: 1rem;
+    }
+
+    .step p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .footer {
+      margin: 32px 0 12px;
+      color: var(--muted);
+      font-size: 0.9rem;
+      text-align: center;
+    }
+
+    .hide {
+      display: none !important;
+    }
+
+    @media (max-width: 1080px) {
+      main {
+        max-width: 980px;
+      }
+
+      .flow {
+        grid-template-columns: 1fr;
+      }
+
+      .flow-node {
+        min-height: auto;
+      }
+
+      .flow-node::after {
+        content: "v";
+        right: 18px;
+        top: auto;
+        bottom: -17px;
+        transform: none;
+      }
+
+      .grid.four,
+      .grid.three {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .hero {
+        grid-template-columns: 1fr;
+        min-height: auto;
+      }
+    }
+
+    @media (max-width: 860px) {
+      html,
+      body {
+        min-width: 0;
+        touch-action: pan-y;
+      }
+
+      .mobile-bar {
+        display: flex;
+        width: 100%;
+        max-width: 100%;
+      }
+
+      .layout {
+        display: block;
+        width: 100%;
+        max-width: 100%;
+        overflow-x: clip;
+      }
+
+      .sidebar {
+        position: fixed;
+        inset: 62px 10px auto 10px;
+        width: auto;
+        max-width: calc(100vw - 20px);
+        height: min(78vh, calc(100vh - 82px));
+        z-index: 90;
+        border-right: 0;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: var(--radius);
+        box-shadow: 0 22px 60px rgba(16, 29, 23, 0.32);
+      }
+
+      main {
+        padding: 14px;
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
+      }
+
+      .hero,
+      .hero-copy,
+      .hero-panel,
+      .section,
+      .notice,
+      .metric,
+      .card,
+      .model-card,
+      .cell-card,
+      .flow-node,
+      .code-card,
+      .table-wrap,
+      .terminal {
+        max-width: 100%;
+        min-width: 0;
+      }
+
+      .hero-copy {
+        padding: 22px;
+      }
+
+      .section {
+        padding: 17px;
+        margin-top: 16px;
+      }
+
+      .section-header {
+        grid-template-columns: 1fr;
+      }
+
+      .grid.two,
+      .grid.three,
+      .grid.four,
+      .explain-grid {
+        grid-template-columns: 1fr;
+        width: 100%;
+        max-width: 100%;
+      }
+
+      .flow-node::after {
+        right: 22px;
+      }
+
+      .cell-summary {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+
+      .cell-status {
+        width: fit-content;
+      }
+
+      .line-row {
+        grid-template-columns: 1fr;
+        width: 100%;
+      }
+
+      .notice {
+        grid-template-columns: 1fr;
+      }
+
+      .table-wrap,
+      .code-card {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      img,
+      svg,
+      canvas,
+      video {
+        max-width: 100%;
+        height: auto;
+      }
+    }
+
+    @media (max-width: 520px) {
+      h1 {
+        font-size: clamp(2rem, 12vw, 3rem);
+      }
+
+      h2 {
+        font-size: 1.42rem;
+      }
+
+      .mobile-title {
+        font-size: 0.9rem;
+      }
+
+      .menu-toggle {
+        min-width: 86px;
+        min-height: 38px;
+        font-size: 0.8rem;
+      }
+
+      pre {
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        font-size: 0.78rem;
+      }
+
+      .bar {
+        grid-template-columns: 1fr;
+        gap: 5px;
+      }
+
+      .hero-panel {
+        padding: 16px;
+      }
+
+      .hero-copy,
+      .hero-panel,
+      .section {
+        width: 100%;
+      }
+
+      .section,
+      .hero-copy {
+        border-radius: var(--radius);
+      }
+
+      .terminal-line {
+        display: grid;
+        gap: 4px;
+      }
+
+      .pill,
+      .score,
+      .cell-status {
+        white-space: normal;
+      }
+
+      table {
+        min-width: 640px;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="shell">
-    <aside>
+  <div class="mobile-bar">
+    <div class="mobile-title">Modul Deteksi Scam Bahasa Indonesia</div>
+    <button class="menu-toggle" type="button" aria-label="Buka navigasi" aria-controls="sidebar" aria-expanded="false" id="menuToggle">Daftar isi</button>
+  </div>
+
+  <div class="layout">
+    <aside class="sidebar" id="sidebar" aria-hidden="true">
       <div class="brand">
-        <div class="mark">ID</div>
+        <div class="brand-mark">ML</div>
         <div>
-          <div>Scam Detector</div>
-          <div style="color:#98a2b3;font-size:.82rem;font-weight:600;">Scam Classification</div>
+          <p class="brand-title">Modul Pembelajaran Deteksi Scam</p>
+          <p class="brand-subtitle">GitHub Pages static module</p>
         </div>
       </div>
-      <div class="nav">
-        <div class="nav-title">Navigasi</div>
-        <a class="active" href="#overview">Overview</a>
-        <a href="#metrics">Evaluasi</a>
-        <a href="#demo">Preview UI</a>
-        <a href="#deploy">Deploy</a>
-      </div>
-      <div class="nav-title">Artifact</div>
-      <div style="color:#d0d5dd;font-size:.9rem;line-height:1.55;">
-        Hybrid checkpoint, tokenizer, preprocessing config, dan split data.
+
+      <button class="nav-close" type="button" id="navClose">Tutup daftar isi</button>
+
+      <div class="nav-title">Navigasi</div>
+      <nav class="nav" aria-label="Navigasi modul">
+        <a href="#ringkasan">Ringkasan</a>
+        <a href="#batasan">Batasan GitHub Pages</a>
+        <a href="#alur">Alur Sistem</a>
+        <a href="#dataset">Dataset</a>
+        <a href="#kaggle">Kaggle Cell-by-Cell</a>
+        <a href="#model">Arsitektur Model</a>
+        <a href="#hasil">Hasil Evaluasi</a>
+        <a href="#hasil-ke-ui">Hasil ke UI</a>
+        <a href="#metode">Penerapan Metode</a>
+        <a href="#artifact">Artifact</a>
+        <a href="#inference">Inference Lokal</a>
+        <a href="#kode-python">Bedah Kode Python</a>
+        <a href="#streamlit">UI Streamlit</a>
+        <a href="#penutup">Ringkasan Akhir</a>
+      </nav>
+
+      <div class="side-note">
+        Halaman ini untuk belajar dan dokumentasi. Prediksi model asli tetap berjalan dari laptop melalui Python, PyTorch, dan Streamlit.
       </div>
     </aside>
 
     <main>
-      <section class="hero" id="overview">
+      <section class="hero" id="ringkasan">
         <div class="hero-copy">
-          <div class="eyebrow">Hybrid IndoBERT + BiLSTM</div>
-          <h1>Deteksi scam bahasa Indonesia.</h1>
+          <div class="eyebrow">Modul pembelajaran proyek akhir</div>
+          <h1>Deteksi Scam Bahasa Indonesia</h1>
           <p class="lead">
-            Ringkasan model, evaluasi, dan preview antarmuka prediksi.
+            Halaman ini menjelaskan bagaimana proyek terbentuk dari dataset SMS Indonesia, pelatihan di Kaggle,
+            model TF-IDF/SVM, IndoBERT, Hybrid IndoBERT BiLSTM, artifact PyTorch, inference lokal, sampai UI Streamlit.
           </p>
-          <div class="actions">
-            <a class="button primary" href="#demo">Lihat Preview</a>
-            <a class="button" href="#deploy">Instruksi Deploy</a>
+          <div class="chips" aria-label="Status proyek">
+            <span class="chip blue">1143 data</span>
+            <span class="chip green">Hybrid F1 97.83%</span>
+            <span class="chip green">Inference CPU tervalidasi</span>
+            <span class="chip amber">GitHub Pages hanya static</span>
           </div>
         </div>
-        <div class="console">
-          <div class="console-top">
-            <span>hasil/scam_hybrid_indobert_bilstm</span>
-            <span>ready</span>
-          </div>
-          <div class="terminal" aria-label="Artifact status">
-            <div class="line"><span>Hybrid checkpoint</span><span class="tag ok">available</span></div>
-            <div class="line"><span>IndoBERT baseline</span><span class="tag ok">available</span></div>
-            <div class="line"><span>Tokenizer local</span><span class="tag ok">available</span></div>
-            <div class="line"><span>Preprocessing config</span><span class="tag ok">available</span></div>
-            <div class="line"><span>Local inference</span><span class="tag ok">validated</span></div>
+
+        <div class="hero-panel" aria-label="Ringkasan teknis">
+          <div class="terminal">
+            <div class="terminal-head">
+              <span>project akhir / docs</span>
+              <span>static preview</span>
+            </div>
+            <div class="terminal-body">
+              <div class="terminal-line">
+                <span>Kaggle training</span>
+                <span class="pill ok">selesai</span>
+              </div>
+              <div class="terminal-line">
+                <span>Model utama</span>
+                <span class="pill blue">Hybrid IndoBERT BiLSTM</span>
+              </div>
+              <div class="terminal-line">
+                <span>Artifact</span>
+                <span class="pill ok">.pth + tokenizer</span>
+              </div>
+              <div class="terminal-line">
+                <span>UI prediksi asli</span>
+                <span class="pill ok">Streamlit lokal</span>
+              </div>
+              <div class="terminal-line">
+                <span>Halaman ini</span>
+                <span class="pill warn">modul belajar</span>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      <section class="section" id="metrics">
+      <div class="grid four" aria-label="Metrik utama">
+        <div class="metric">
+          <div class="metric-label">Total dataset</div>
+          <div class="metric-value">1143</div>
+          <div class="metric-desc">Baris data setelah dibaca dari `indo_spam.csv`.</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Train / Val / Test</div>
+          <div class="metric-value">913 / 138 / 92</div>
+          <div class="metric-desc">Split stratified dengan proporsi 80% / 12% / 8%.</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Hybrid F1 test</div>
+          <div class="metric-value">97.83%</div>
+          <div class="metric-desc">Model utama sesuai proposal proyek.</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">Confusion Hybrid</div>
+          <div class="metric-value">45/45</div>
+          <div class="metric-desc">TP=45, TN=45, FP=1, FN=1 pada test split.</div>
+        </div>
+      </div>
+
+      <section class="notice" id="batasan">
+        <div class="notice-icon">!</div>
+        <div>
+          <strong>GitHub Pages dipakai untuk modul, bukan menjalankan model asli.</strong>
+          <p>
+            GitHub Pages hanya menyajikan HTML, CSS, dan JavaScript statis. Checkpoint PyTorch `.pth`,
+            tokenizer Transformers, dan inference IndoBERT tetap membutuhkan Python runtime. Jadi halaman ini aman
+            dibuka dari HP sebagai materi belajar, sementara prediksi nyata dijalankan dari laptop lewat Streamlit.
+          </p>
+        </div>
+      </section>
+
+      <section class="section" id="alur">
         <div class="section-header">
           <div>
-            <h2>Evaluasi Model</h2>
-            <div class="muted">Test set: 92 data. Total dataset: 1143 data.</div>
+            <div class="mini-label">Peta besar</div>
+            <h2>Alur sistem dari data sampai UI</h2>
+            <p class="section-intro">
+              Proyek ini punya dua jalur: jalur training di Kaggle untuk menghasilkan model, dan jalur lokal
+              di laptop untuk memuat artifact lalu memberi prediksi lewat UI.
+            </p>
           </div>
-          <div class="tag ok">1143 total data</div>
         </div>
-        <div class="metrics">
-          <article class="metric">
-            <h3>IndoBERT Classifier</h3>
-            <div class="metric-value">98.92%</div>
-            <div class="bar"><span style="width:98.9247%"></span></div>
-            <p class="muted">Threshold 0.75.</p>
-          </article>
-          <article class="metric">
-            <h3>Hybrid IndoBERT+BiLSTM</h3>
-            <div class="metric-value">97.83%</div>
-            <div class="bar"><span style="width:97.8261%"></span></div>
-            <p class="muted">Threshold 0.68.</p>
-          </article>
-          <article class="metric">
-            <h3>SVM TF-IDF</h3>
-            <div class="metric-value">95.74%</div>
-            <div class="bar"><span style="width:95.7447%"></span></div>
-            <p class="muted">Baseline pembanding.</p>
-          </article>
+
+        <div class="flow">
+          <div class="flow-node">
+            <div class="flow-number">1</div>
+            <h3>Dataset</h3>
+            <p>File `indo_spam.csv` dibaca dari Kaggle Input dengan kolom `Kategori` dan `Pesan`.</p>
+          </div>
+          <div class="flow-node">
+            <div class="flow-number">2</div>
+            <h3>Training</h3>
+            <p>Notebook menjalankan preprocessing, tokenizer, SVM, IndoBERT, dan Hybrid BiLSTM.</p>
+          </div>
+          <div class="flow-node">
+            <div class="flow-number">3</div>
+            <h3>Artifact</h3>
+            <p>Model `.pth`, tokenizer, split data, hasil evaluasi, dan config disimpan ke output Kaggle.</p>
+          </div>
+          <div class="flow-node">
+            <div class="flow-number">4</div>
+            <h3>Inference</h3>
+            <p>`app/inference.py` memuat artifact, membersihkan teks, lalu menghitung probabilitas scam.</p>
+          </div>
+          <div class="flow-node">
+            <div class="flow-number">5</div>
+            <h3>UI & Modul</h3>
+            <p>Streamlit untuk prediksi asli. `docs/index.html` untuk modul GitHub Pages.</p>
+          </div>
         </div>
       </section>
 
-      <section class="section">
-        <div class="detail">
+      <section class="section" id="dataset">
+        <div class="section-header">
           <div>
-            <h2>Perbandingan Model</h2>
-            <p class="muted">
-              Perbandingan accuracy, precision, recall, dan F1 pada test set.
+            <div class="mini-label">Data dan target</div>
+            <h2>Dataset SMS spam/scam Indonesia</h2>
+            <p class="section-intro">
+              Target model adalah klasifikasi biner: `0` untuk normal/ham dan `1` untuk scam/spam.
+              Dataset cukup seimbang, sehingga metrik precision, recall, dan F1 bisa dibaca dengan stabil.
             </p>
           </div>
-          <table class="table">
+        </div>
+
+        <div class="grid three">
+          <div class="card">
+            <h3>Kolom sumber</h3>
+            <p>`Pesan` menjadi teks input, sedangkan `Kategori` menjadi label awal dari dataset.</p>
+          </div>
+          <div class="card">
+            <h3>Distribusi label</h3>
+            <p>Normal/ham: 569 data. Scam/spam: 574 data. Selisih kecil, jadi dataset relatif seimbang.</p>
+          </div>
+          <div class="card">
+            <h3>Panjang pesan</h3>
+            <p>Rata-rata 108.74 karakter dan 16.69 kata per pesan sebelum preprocessing.</p>
+          </div>
+        </div>
+
+        <div class="table-wrap" style="margin-top:14px">
+          <table>
+            <thead>
+              <tr>
+                <th>Split</th>
+                <th>Jumlah data</th>
+                <th>Normal/Ham</th>
+                <th>Scam/Spam</th>
+                <th>Fungsi</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Train</td>
+                <td>913</td>
+                <td>454</td>
+                <td>459</td>
+                <td>Melatih parameter model.</td>
+              </tr>
+              <tr>
+                <td>Validation</td>
+                <td>138</td>
+                <td>69</td>
+                <td>69</td>
+                <td>Memilih threshold dan checkpoint terbaik.</td>
+              </tr>
+              <tr>
+                <td>Test</td>
+                <td>92</td>
+                <td>46</td>
+                <td>46</td>
+                <td>Menguji performa akhir setelah training selesai.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="section" id="kaggle">
+        <div class="section-header">
+          <div>
+            <div class="mini-label">Notebook training</div>
+            <h2>Bedah Kaggle cell-by-cell</h2>
+            <p class="section-intro">
+              Bagian ini mengikuti struktur notebook `hasil/sms-spam.ipynb`. Setiap cell dibuka sebagai modul kecil:
+              tujuan, kode kunci, dan makna baris pentingnya.
+            </p>
+          </div>
+          <span class="chip blue">18 cell terbaca</span>
+        </div>
+
+        <div class="cell-tools">
+          <input class="search" id="cellSearch" type="search" placeholder="Cari cell, contoh: tokenizer, SVM, threshold, artifact">
+          <button class="tool-button" type="button" data-action="open">Buka semua</button>
+          <button class="tool-button" type="button" data-action="close">Tutup semua</button>
+        </div>
+
+        <div class="cell-list" id="cellList">
+          <details class="cell-card" open data-keywords="kaggle input default os numpy pandas kagglehub">
+            <summary class="cell-summary">
+              <span class="cell-index">Pra-1</span>
+              <span class="cell-title">
+                <strong>Environment Kaggle default</strong>
+                <span>Mengecek file di `/kaggle/input` dan library dasar.</span>
+              </span>
+              <span class="cell-status">exec 1</span>
+            </summary>
+            <div class="cell-body">
+              <div class="explain-grid">
+                <div class="code-card">
+                  <div class="code-head">
+                    <span>kode inti</span>
+                    <button class="copy-button" type="button">Copy</button>
+                  </div>
+                  <pre><code>import numpy as np
+import pandas as pd
+
+import os
+for dirname, _, filenames in os.walk('/kaggle/input'):
+    for filename in filenames:
+        print(os.path.join(dirname, filename))</code></pre>
+                </div>
+                <div class="line-map">
+                  <div class="line-row"><code>numpy</code><span>Dipakai untuk operasi numerik dan array selama evaluasi.</span></div>
+                  <div class="line-row"><code>pandas</code><span>Dipakai membaca CSV dan mengolah dataframe.</span></div>
+                  <div class="line-row"><code>os.walk</code><span>Menelusuri semua file input Kaggle agar path dataset tidak ditebak manual.</span></div>
+                </div>
+              </div>
+              <div class="callout green"><strong>Output penting</strong><p>Notebook menemukan `indo_spam.csv`, `train.csv`, `test.csv`, `eval.csv`, dan file hasil notebook referensi.</p></div>
+            </div>
+          </details>
+
+          <details class="cell-card" data-keywords="huggingface internet request 200 transformers download">
+            <summary class="cell-summary">
+              <span class="cell-index">Pra-2</span>
+              <span class="cell-title">
+                <strong>Cek koneksi Hugging Face</strong>
+                <span>Memastikan runtime bisa mengakses model `indobenchmark/indobert-base-p2`.</span>
+              </span>
+              <span class="cell-status">exec 2</span>
+            </summary>
+            <div class="cell-body">
+              <div class="explain-grid">
+                <div class="code-card">
+                  <div class="code-head">
+                    <span>kode inti</span>
+                    <button class="copy-button" type="button">Copy</button>
+                  </div>
+                  <pre><code>import requests
+print(requests.get("https://huggingface.co").status_code)</code></pre>
+                </div>
+                <div class="line-map">
+                  <div class="line-row"><code>requests.get</code><span>Mengirim request sederhana ke Hugging Face.</span></div>
+                  <div class="line-row"><code>status_code</code><span>Nilai `200` berarti server bisa diakses.</span></div>
+                </div>
+              </div>
+              <div class="callout green"><strong>Output penting</strong><p>Status `200`, jadi tokenizer dan model IndoBERT bisa diunduh dari runtime Kaggle saat training.</p></div>
+            </div>
+          </details>
+
+          <details class="cell-card" open data-keywords="cell 1 setup config seed cuda gpu t4 p100 import library">
+            <summary class="cell-summary">
+              <span class="cell-index">Cell 1</span>
+              <span class="cell-title">
+                <strong>Setup library, konfigurasi, seed, dan device</strong>
+                <span>Menyiapkan semua dependency dan parameter eksperimen.</span>
+              </span>
+              <span class="cell-status">exec 3</span>
+            </summary>
+            <div class="cell-body">
+              <div class="explain-grid">
+                <div class="code-card">
+                  <div class="code-head">
+                    <span>kode inti</span>
+                    <button class="copy-button" type="button">Copy</button>
+                  </div>
+                  <pre><code>CONFIG = {
+    "model_name": "indobenchmark/indobert-base-p2",
+    "seed": 42,
+    "max_length": 128,
+    "batch_size": 16,
+    "epochs_indobert": 6,
+    "epochs_hybrid": 10,
+    "learning_rate": 2e-5,
+    "lstm_hidden_size": 256,
+    "lstm_layers": 2,
+    "train_size": 0.80,
+    "val_size": 0.12,
+    "test_size": 0.08,
+}
+
+set_seed(CONFIG["seed"])
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")</code></pre>
+                </div>
+                <div class="line-map">
+                  <div class="line-row"><code>ensure_package</code><span>Menginstal dependency hanya jika belum tersedia di Kaggle.</span></div>
+                  <div class="line-row"><code>model_name</code><span>Menetapkan IndoBERT sebagai backbone bahasa Indonesia.</span></div>
+                  <div class="line-row"><code>max_length=128</code><span>Setiap pesan dipotong atau dipad menjadi 128 token.</span></div>
+                  <div class="line-row"><code>batch_size=16</code><span>Jumlah sampel per batch agar muat di GPU T4.</span></div>
+                  <div class="line-row"><code>set_seed(42)</code><span>Membuat split dan training lebih mudah direplikasi.</span></div>
+                  <div class="line-row"><code>cuda</code><span>Memakai GPU jika tersedia. Notebook mendeteksi Tesla T4 dengan CUDA 12.8.</span></div>
+                </div>
+              </div>
+              <div class="callout amber"><strong>Hal penting</strong><p>Notebook sengaja menolak Tesla P100 karena ada risiko incompatibility CUDA untuk operasi IndoBERT di Kaggle. Runtime yang dipakai: Tesla T4.</p></div>
+            </div>
+          </details>
+
+          <details class="cell-card" data-keywords="cell 2 dataset load path csv indo_spam">
+            <summary class="cell-summary">
+              <span class="cell-index">Cell 2</span>
+              <span class="cell-title">
+                <strong>Deteksi dan load dataset</strong>
+                <span>Mencari CSV secara otomatis dari Kaggle Input atau folder lokal.</span>
+              </span>
+              <span class="cell-status">exec 4</span>
+            </summary>
+            <div class="cell-body">
+              <div class="explain-grid">
+                <div class="code-card">
+                  <div class="code-head">
+                    <span>kode inti</span>
+                    <button class="copy-button" type="button">Copy</button>
+                  </div>
+                  <pre><code>priority_names = ["indo_spam.csv", "sms_spam_indo.csv", "spam.csv"]
+search_roots = [Path("/kaggle/input"), Path("dataset"), Path(".")]
+
+dataset_path = pick_dataset_path()
+raw_df = pd.read_csv(dataset_path)</code></pre>
+                </div>
+                <div class="line-map">
+                  <div class="line-row"><code>priority_names</code><span>Memberi prioritas pada nama dataset utama.</span></div>
+                  <div class="line-row"><code>search_roots</code><span>Membuat notebook fleksibel: jalan di Kaggle atau lokal.</span></div>
+                  <div class="line-row"><code>pick_dataset_path</code><span>Mengembalikan path CSV pertama yang cocok.</span></div>
+                  <div class="line-row"><code>pd.read_csv</code><span>Membaca dataset ke dataframe `raw_df`.</span></div>
+                </div>
+              </div>
+              <div class="callout green"><strong>Output penting</strong><p>Dataset utama: `indo_spam.csv`. Bentuk data mentah: 1143 baris dan 2 kolom.</p></div>
+            </div>
+          </details>
+
+          <details class="cell-card" data-keywords="cell 3 label kategori pesan binary scam spam ham normal">
+            <summary class="cell-summary">
+              <span class="cell-index">Cell 3</span>
+              <span class="cell-title">
+                <strong>Standardisasi kolom dan label biner</strong>
+                <span>Mengubah label dataset menjadi 0 normal/ham dan 1 scam/spam.</span>
+              </span>
+              <span class="cell-status">exec 5</span>
+            </summary>
+            <div class="cell-body">
+              <div class="explain-grid">
+                <div class="code-card">
+                  <div class="code-head">
+                    <span>kode inti</span>
+                    <button class="copy-button" type="button">Copy</button>
+                  </div>
+                  <pre><code>POSITIVE_LABELS = {"spam", "scam", "fraud", "penipuan", "phishing", "1"}
+NEGATIVE_LABELS = {"ham", "normal", "nonspam", "0"}
+
+text_col = detect_column(raw_df, TEXT_COLUMN_CANDIDATES, "teks")
+label_col = detect_column(raw_df, LABEL_COLUMN_CANDIDATES, "label")
+
+base_df = raw_df[[text_col, label_col]].copy()
+base_df.columns = ["text", "label_raw"]
+base_df["label"] = base_df["label_raw"].apply(normalize_label)</code></pre>
+                </div>
+                <div class="line-map">
+                  <div class="line-row"><code>POSITIVE_LABELS</code><span>Semua variasi label positif dipetakan ke kelas scam/spam.</span></div>
+                  <div class="line-row"><code>NEGATIVE_LABELS</code><span>Semua variasi label normal dipetakan ke kelas ham.</span></div>
+                  <div class="line-row"><code>detect_column</code><span>Mendeteksi kolom walau kapitalisasi berbeda.</span></div>
+                  <div class="line-row"><code>normalize_label</code><span>Menghasilkan label numerik `0` atau `1`.</span></div>
+                </div>
+              </div>
+              <div class="callout green"><strong>Output penting</strong><p>Kolom teks: `Pesan`. Kolom label: `Kategori`. Distribusi akhir: 569 normal/ham dan 574 scam/spam.</p></div>
+            </div>
+          </details>
+
+          <details class="cell-card" data-keywords="cell 4 eda split train validation test stratify">
+            <summary class="cell-summary">
+              <span class="cell-index">Cell 4</span>
+              <span class="cell-title">
+                <strong>EDA singkat dan split data 80/12/8</strong>
+                <span>Melihat distribusi kelas, panjang teks, dan membagi data secara stratified.</span>
+              </span>
+              <span class="cell-status">exec 6</span>
+            </summary>
+            <div class="cell-body">
+              <div class="explain-grid">
+                <div class="code-card">
+                  <div class="code-head">
+                    <span>kode inti</span>
+                    <button class="copy-button" type="button">Copy</button>
+                  </div>
+                  <pre><code>test_size = CONFIG["test_size"]
+val_ratio_from_remaining = CONFIG["val_size"] / (
+    CONFIG["train_size"] + CONFIG["val_size"]
+)
+
+train_val_df, test_df = train_test_split(
+    base_df,
+    test_size=test_size,
+    stratify=base_df["label"],
+    random_state=CONFIG["seed"],
+)
+train_df, val_df = train_test_split(
+    train_val_df,
+    test_size=val_ratio_from_remaining,
+    stratify=train_val_df["label"],
+    random_state=CONFIG["seed"],
+)</code></pre>
+                </div>
+                <div class="line-map">
+                  <div class="line-row"><code>stratify</code><span>Menjaga rasio normal dan scam tetap seimbang pada tiap split.</span></div>
+                  <div class="line-row"><code>test_size=0.08</code><span>Memisahkan 8% data sebagai test final.</span></div>
+                  <div class="line-row"><code>val_ratio</code><span>Mengambil validation dari sisa data agar total akhirnya 12%.</span></div>
+                  <div class="line-row"><code>random_state=42</code><span>Membuat pembagian data konsisten saat diulang.</span></div>
+                </div>
+              </div>
+              <div class="callout green"><strong>Output penting</strong><p>Train 913 data, validation 138 data, test 92 data. Test split benar-benar seimbang: 46 normal dan 46 scam.</p></div>
+            </div>
+          </details>
+
+          <details class="cell-card" data-keywords="cell 5 preprocessing slang regex clean_text url mention hashtag">
+            <summary class="cell-summary">
+              <span class="cell-index">Cell 5</span>
+              <span class="cell-title">
+                <strong>Preprocessing dan normalisasi slang</strong>
+                <span>Membersihkan teks sosial/SMS agar input model lebih konsisten.</span>
+              </span>
+              <span class="cell-status">exec 7</span>
+            </summary>
+            <div class="cell-body">
+              <div class="explain-grid">
+                <div class="code-card">
+                  <div class="code-head">
+                    <span>kode inti</span>
+                    <button class="copy-button" type="button">Copy</button>
+                  </div>
+                  <pre><code>URL_PATTERN = re.compile(r"https?://\S+|www\.\S+", flags=re.IGNORECASE)
+MENTION_PATTERN = re.compile(r"@\w+")
+HASHTAG_PATTERN = re.compile(r"#(\w+)")
+
+def clean_text(text):
+    text = str(text).lower()
+    text = URL_PATTERN.sub(" link ", text)
+    text = MENTION_PATTERN.sub(" user ", text)
+    text = HASHTAG_PATTERN.sub(r"\1", text)
+    text = re.sub(r"[^a-z0-9\s]", " ", text)
+    words = []
+    for word in text.split():
+        word = normalize_repeated_chars(word)
+        word = SLANG_DICT.get(word, word)
+        words.extend(word.split())
+    return REPEATED_SPACE_PATTERN.sub(" ", " ".join(words)).strip()</code></pre>
+                </div>
+                <div class="line-map">
+                  <div class="line-row"><code>lower()</code><span>Menyamakan kapitalisasi agar `Hadiah` dan `hadiah` dianggap sama.</span></div>
+                  <div class="line-row"><code>URL_PATTERN</code><span>Mengubah URL menjadi token `link` karena URL sering muncul pada scam.</span></div>
+                  <div class="line-row"><code>MENTION_PATTERN</code><span>Mengubah mention menjadi `user` agar nama akun tidak menjadi noise.</span></div>
+                  <div class="line-row"><code>SLANG_DICT</code><span>Mengubah singkatan seperti `plg`, `yth`, `tf`, `admin` menjadi bentuk baku.</span></div>
+                  <div class="line-row"><code>keep_numbers</code><span>Angka tetap dipertahankan karena nominal, rekening, dan kode sering penting dalam scam.</span></div>
+                </div>
+              </div>
+              <div class="callout green"><strong>Contoh output</strong><p>`Plg Yth... www.hadiah-palsu.com` menjadi `pelanggan yang terhormat simcard anda mendapatkan bonus poin klik link`.</p></div>
+            </div>
+          </details>
+
+          <details class="cell-card" data-keywords="cell 6 apply preprocessing clean_text split average token">
+            <summary class="cell-summary">
+              <span class="cell-index">Cell 6</span>
+              <span class="cell-title">
+                <strong>Terapkan preprocessing ke semua split</strong>
+                <span>Membuat kolom `clean_text` untuk train, validation, dan test.</span>
+              </span>
+              <span class="cell-status">exec 8</span>
+            </summary>
+            <div class="cell-body">
+              <div class="explain-grid">
+                <div class="code-card">
+                  <div class="code-head">
+                    <span>kode inti</span>
+                    <button class="copy-button" type="button">Copy</button>
+                  </div>
+                  <pre><code>for split_df in [train_df, val_df, test_df]:
+    split_df["clean_text"] = split_df["text"].apply(clean_text)
+    empty_mask = split_df["clean_text"].str.len() == 0
+    split_df.loc[empty_mask, "clean_text"] = (
+        split_df.loc[empty_mask, "text"].astype(str).str.lower()
+    )</code></pre>
+                </div>
+                <div class="line-map">
+                  <div class="line-row"><code>apply(clean_text)</code><span>Membersihkan semua pesan dengan fungsi yang sama.</span></div>
+                  <div class="line-row"><code>empty_mask</code><span>Mendeteksi hasil cleaning kosong.</span></div>
+                  <div class="line-row"><code>fallback text</code><span>Jika cleaning kosong, teks asli versi lowercase dipakai supaya model tetap punya input.</span></div>
+                </div>
+              </div>
+              <div class="callout green"><strong>Output penting</strong><p>Rata-rata panjang setelah preprocessing: train 18.05 token, validation 18.00 token, test 18.72 token.</p></div>
+            </div>
+          </details>
+
+          <details class="cell-card" data-keywords="cell 7 tokenizer indobert dataset pytorch dataloader input_ids attention_mask">
+            <summary class="cell-summary">
+              <span class="cell-index">Cell 7</span>
+              <span class="cell-title">
+                <strong>Tokenizer IndoBERT dan Dataset PyTorch</strong>
+                <span>Mengubah teks menjadi `input_ids`, `attention_mask`, dan `labels`.</span>
+              </span>
+              <span class="cell-status">exec 9</span>
+            </summary>
+            <div class="cell-body">
+              <div class="explain-grid">
+                <div class="code-card">
+                  <div class="code-head">
+                    <span>kode inti</span>
+                    <button class="copy-button" type="button">Copy</button>
+                  </div>
+                  <pre><code>tokenizer = AutoTokenizer.from_pretrained(CONFIG["model_name"])
+
+class ScamTextDataset(Dataset):
+    def __getitem__(self, idx):
+        encoding = self.tokenizer(
+            self.texts[idx],
+            truncation=True,
+            padding="max_length",
+            max_length=self.max_length,
+            return_tensors="pt",
+        )
+        return {
+            "input_ids": encoding["input_ids"].squeeze(0),
+            "attention_mask": encoding["attention_mask"].squeeze(0),
+            "labels": torch.tensor(self.labels[idx], dtype=torch.float),
+        }</code></pre>
+                </div>
+                <div class="line-map">
+                  <div class="line-row"><code>AutoTokenizer</code><span>Memuat tokenizer yang sesuai dengan IndoBERT.</span></div>
+                  <div class="line-row"><code>truncation=True</code><span>Pesan yang terlalu panjang dipotong sampai 128 token.</span></div>
+                  <div class="line-row"><code>padding=max_length</code><span>Pesan pendek ditambah padding agar ukuran batch seragam.</span></div>
+                  <div class="line-row"><code>attention_mask</code><span>Memberi tahu model token mana yang asli dan mana yang padding.</span></div>
+                  <div class="line-row"><code>DataLoader</code><span>Menyusun batch ukuran 16 untuk training dan evaluasi.</span></div>
+                </div>
+              </div>
+              <div class="callout green"><strong>Output penting</strong><p>Batch shape: `input_ids [16, 128]`, `attention_mask [16, 128]`, dan `labels [16]`.</p></div>
+            </div>
+          </details>
+
+          <details class="cell-card" data-keywords="cell 8 evaluation metrics threshold confusion matrix f1 roc auc">
+            <summary class="cell-summary">
+              <span class="cell-index">Cell 8</span>
+              <span class="cell-title">
+                <strong>Helper evaluasi dan threshold tuning</strong>
+                <span>Menghitung accuracy, precision, recall, F1, ROC-AUC, dan confusion matrix.</span>
+              </span>
+              <span class="cell-status">exec 10</span>
+            </summary>
+            <div class="cell-body">
+              <div class="explain-grid">
+                <div class="code-card">
+                  <div class="code-head">
+                    <span>kode inti</span>
+                    <button class="copy-button" type="button">Copy</button>
+                  </div>
+                  <pre><code>def evaluate_binary(y_true, y_prob=None, y_pred=None, threshold=0.5):
+    if y_pred is None:
+        y_pred = (np.asarray(y_prob) >= threshold).astype(int)
+    metrics = {
+        "accuracy": accuracy_score(y_true, y_pred),
+        "precision": precision_score(y_true, y_pred, zero_division=0),
+        "recall": recall_score(y_true, y_pred, zero_division=0),
+        "f1": f1_score(y_true, y_pred, zero_division=0),
+        "threshold": threshold,
+    }
+    return metrics</code></pre>
+                </div>
+                <div class="line-map">
+                  <div class="line-row"><code>threshold</code><span>Batas probabilitas untuk mengubah skor menjadi label scam.</span></div>
+                  <div class="line-row"><code>precision</code><span>Seberapa sering prediksi scam benar-benar scam.</span></div>
+                  <div class="line-row"><code>recall</code><span>Seberapa banyak scam asli berhasil tertangkap.</span></div>
+                  <div class="line-row"><code>f1</code><span>Metrik utama karena menyeimbangkan precision dan recall.</span></div>
+                  <div class="line-row"><code>find_best_threshold</code><span>Mencoba threshold 0.20 sampai 0.80 lalu memilih F1 validation tertinggi.</span></div>
+                </div>
+              </div>
+            </div>
+          </details>
+
+          <details class="cell-card" data-keywords="cell 9 svm tfidf linear svc baseline classic ml">
+            <summary class="cell-summary">
+              <span class="cell-index">Cell 9</span>
+              <span class="cell-title">
+                <strong>Baseline Machine Learning: TF-IDF + Linear SVM</strong>
+                <span>Membuat pembanding klasik sebelum model deep learning.</span>
+              </span>
+              <span class="cell-status">exec 11</span>
+            </summary>
+            <div class="cell-body">
+              <div class="explain-grid">
+                <div class="code-card">
+                  <div class="code-head">
+                    <span>kode inti</span>
+                    <button class="copy-button" type="button">Copy</button>
+                  </div>
+                  <pre><code>tfidf = TfidfVectorizer(
+    max_features=10000,
+    ngram_range=(1, 2),
+    min_df=1,
+    sublinear_tf=True,
+)
+X_train_tfidf = tfidf.fit_transform(train_df["clean_text"])
+svm_model = LinearSVC(class_weight="balanced", random_state=CONFIG["seed"])
+svm_model.fit(X_train_tfidf, train_df["label"])</code></pre>
+                </div>
+                <div class="line-map">
+                  <div class="line-row"><code>TF-IDF</code><span>Mengubah kata menjadi bobot numerik berdasarkan pentingnya kata.</span></div>
+                  <div class="line-row"><code>ngram_range=(1,2)</code><span>Memakai satu kata dan dua kata berurutan sebagai fitur.</span></div>
+                  <div class="line-row"><code>max_features=10000</code><span>Membatasi jumlah fitur agar training cepat dan stabil.</span></div>
+                  <div class="line-row"><code>LinearSVC</code><span>Model klasifikasi linear yang kuat sebagai baseline teks.</span></div>
+                </div>
+              </div>
+              <div class="callout green"><strong>Output penting</strong><p>SVM test F1 95.74%, accuracy 95.65%, precision 93.75%, recall 97.83%.</p></div>
+            </div>
+          </details>
+
+          <details class="cell-card" data-keywords="cell 10 model class indobert classifier hybrid bilstm attention pooling">
+            <summary class="cell-summary">
+              <span class="cell-index">Cell 10</span>
+              <span class="cell-title">
+                <strong>Definisi IndoBERT dan Hybrid IndoBERT BiLSTM</strong>
+                <span>Membuat dua arsitektur neural network untuk dibandingkan.</span>
+              </span>
+              <span class="cell-status">exec 12</span>
+            </summary>
+            <div class="cell-body">
+              <div class="explain-grid">
+                <div class="code-card">
+                  <div class="code-head">
+                    <span>kode inti</span>
+                    <button class="copy-button" type="button">Copy</button>
+                  </div>
+                  <pre><code>class IndoBertClassifier(nn.Module):
+    self.bert = AutoModel.from_pretrained(model_name)
+    self.classifier = nn.Linear(hidden_size, 2)
+
+class HybridIndoBertBiLSTM(nn.Module):
+    self.bert = AutoModel.from_pretrained(model_name)
+    self.lstm = nn.LSTM(
+        input_size=bert_hidden_size,
+        hidden_size=lstm_hidden_size,
+        num_layers=lstm_layers,
+        batch_first=True,
+        bidirectional=True,
+    )
+    self.attention_pooling = AttentionPooling(lstm_hidden_size * 2)
+    self.classifier = nn.Linear(lstm_hidden_size * 2, 1)</code></pre>
+                </div>
+                <div class="line-map">
+                  <div class="line-row"><code>IndoBERT</code><span>Menghasilkan representasi konteks bahasa Indonesia.</span></div>
+                  <div class="line-row"><code>CLS embedding</code><span>Dipakai oleh baseline IndoBERT classifier.</span></div>
+                  <div class="line-row"><code>BiLSTM</code><span>Membaca urutan token dari dua arah untuk menangkap pola sekuensial.</span></div>
+                  <div class="line-row"><code>AttentionPooling</code><span>Memberi bobot lebih besar pada token yang lebih penting.</span></div>
+                  <div class="line-row"><code>BCE output</code><span>Hybrid menghasilkan satu logit probabilitas scam.</span></div>
+                </div>
+              </div>
+            </div>
+          </details>
+
+          <details class="cell-card" data-keywords="cell 11 training loop optimizer adamw scheduler warmup amp early stopping">
+            <summary class="cell-summary">
+              <span class="cell-index">Cell 11</span>
+              <span class="cell-title">
+                <strong>Training loop PyTorch</strong>
+                <span>Menjalankan forward, loss, backward, optimizer, scheduler, dan checkpointing.</span>
+              </span>
+              <span class="cell-status">exec 13</span>
+            </summary>
+            <div class="cell-body">
+              <div class="explain-grid">
+                <div class="code-card">
+                  <div class="code-head">
+                    <span>kode inti</span>
+                    <button class="copy-button" type="button">Copy</button>
+                  </div>
+                  <pre><code>optimizer = AdamW(
+    [p for p in model.parameters() if p.requires_grad],
+    lr=CONFIG["learning_rate"],
+    weight_decay=CONFIG["weight_decay"],
+)
+scheduler = get_linear_schedule_with_warmup(
+    optimizer,
+    num_warmup_steps=warmup_steps,
+    num_training_steps=total_steps,
+)
+scaler = torch.cuda.amp.GradScaler(enabled=CONFIG["use_amp"] and device.type == "cuda")</code></pre>
+                </div>
+                <div class="line-map">
+                  <div class="line-row"><code>AdamW</code><span>Optimizer umum untuk fine-tuning Transformer.</span></div>
+                  <div class="line-row"><code>weight_decay</code><span>Regularisasi agar model tidak terlalu menghafal training set.</span></div>
+                  <div class="line-row"><code>warmup</code><span>Learning rate dinaikkan pelan di awal agar training stabil.</span></div>
+                  <div class="line-row"><code>AMP</code><span>Mixed precision mempercepat training di GPU.</span></div>
+                  <div class="line-row"><code>early stopping</code><span>Training berhenti jika F1 validation tidak membaik selama 3 epoch.</span></div>
+                </div>
+              </div>
+            </div>
+          </details>
+
+          <details class="cell-card" data-keywords="cell 12 indobert training baseline epoch threshold validation test">
+            <summary class="cell-summary">
+              <span class="cell-index">Cell 12</span>
+              <span class="cell-title">
+                <strong>Training IndoBERT Classifier</strong>
+                <span>Melatih baseline deep learning berbasis IndoBERT murni.</span>
+              </span>
+              <span class="cell-status">exec 14</span>
+            </summary>
+            <div class="cell-body">
+              <div class="explain-grid">
+                <div class="code-card">
+                  <div class="code-head">
+                    <span>kode inti</span>
+                    <button class="copy-button" type="button">Copy</button>
+                  </div>
+                  <pre><code>indobert_model = IndoBertClassifier(CONFIG["model_name"], dropout=CONFIG["dropout"])
+indobert_model, indobert_best = train_torch_model(
+    indobert_model,
+    model_name="IndoBERT Classifier",
+    epochs=CONFIG["epochs_indobert"],
+)
+indobert_threshold = indobert_best["threshold"]</code></pre>
+                </div>
+                <div class="line-map">
+                  <div class="line-row"><code>IndoBertClassifier</code><span>Backbone IndoBERT + dropout + linear classifier 2 kelas.</span></div>
+                  <div class="line-row"><code>epochs_indobert=6</code><span>Maksimal 6 epoch, tetapi tetap dikontrol early stopping.</span></div>
+                  <div class="line-row"><code>best threshold</code><span>Threshold terbaik diambil dari validation F1.</span></div>
+                  <div class="line-row"><code>cpu_state</code><span>State model disimpan ke CPU sebelum memori GPU dibersihkan.</span></div>
+                </div>
+              </div>
+              <div class="callout green"><strong>Output penting</strong><p>Best epoch 3, threshold 0.75, validation F1 97.87%, test F1 98.92%, selesai sekitar 0.91 menit.</p></div>
+            </div>
+          </details>
+
+          <details class="cell-card" open data-keywords="cell 13 hybrid indobert bilstm training epoch threshold validation test main model">
+            <summary class="cell-summary">
+              <span class="cell-index">Cell 13</span>
+              <span class="cell-title">
+                <strong>Training model utama Hybrid IndoBERT BiLSTM</strong>
+                <span>Model sesuai proposal: IndoBERT untuk konteks, BiLSTM untuk sekuens, attention untuk pooling.</span>
+              </span>
+              <span class="cell-status">exec 15</span>
+            </summary>
+            <div class="cell-body">
+              <div class="explain-grid">
+                <div class="code-card">
+                  <div class="code-head">
+                    <span>kode inti</span>
+                    <button class="copy-button" type="button">Copy</button>
+                  </div>
+                  <pre><code>hybrid_model = HybridIndoBertBiLSTM(
+    model_name=CONFIG["model_name"],
+    lstm_hidden_size=CONFIG["lstm_hidden_size"],
+    lstm_layers=CONFIG["lstm_layers"],
+    dropout=CONFIG["dropout"],
+    freeze_bert=CONFIG["freeze_bert_in_hybrid"],
+)
+hybrid_model, hybrid_best = train_torch_model(
+    hybrid_model,
+    model_name="Hybrid IndoBERT+BiLSTM",
+    epochs=CONFIG["epochs_hybrid"],
+)</code></pre>
+                </div>
+                <div class="line-map">
+                  <div class="line-row"><code>lstm_hidden_size=256</code><span>Ukuran hidden state BiLSTM per arah.</span></div>
+                  <div class="line-row"><code>lstm_layers=2</code><span>Dua layer LSTM untuk representasi sekuens yang lebih dalam.</span></div>
+                  <div class="line-row"><code>bidirectional</code><span>Membaca token dari kiri ke kanan dan kanan ke kiri.</span></div>
+                  <div class="line-row"><code>freeze_bert=False</code><span>IndoBERT ikut di-fine-tune, bukan hanya dipakai sebagai feature extractor.</span></div>
+                  <div class="line-row"><code>epochs_hybrid=10</code><span>Batas maksimal 10 epoch, tetapi early stopping berhenti di epoch 5.</span></div>
+                </div>
+              </div>
+              <div class="callout green"><strong>Output penting</strong><p>Best epoch 2, threshold 0.68, validation F1 97.87%, test F1 97.83%, selesai sekitar 0.85 menit.</p></div>
+            </div>
+          </details>
+
+          <details class="cell-card" data-keywords="cell 14 summary final metrics f1 precision recall accuracy roc auc">
+            <summary class="cell-summary">
+              <span class="cell-index">Cell 14</span>
+              <span class="cell-title">
+                <strong>Ringkasan hasil akhir semua model</strong>
+                <span>Menyusun tabel test metrics dan grafik perbandingan F1.</span>
+              </span>
+              <span class="cell-status">exec 16</span>
+            </summary>
+            <div class="cell-body">
+              <div class="explain-grid">
+                <div class="code-card">
+                  <div class="code-head">
+                    <span>kode inti</span>
+                    <button class="copy-button" type="button">Copy</button>
+                  </div>
+                  <pre><code>results_df = pd.DataFrame(RESULTS)
+summary_df = results_df[results_df["split"].eq("test")].copy()
+metric_cols = ["accuracy", "precision", "recall", "f1", "roc_auc", "threshold"]
+summary_df = summary_df[["model", "split"] + metric_cols].sort_values(
+    "f1",
+    ascending=False,
+)</code></pre>
+                </div>
+                <div class="line-map">
+                  <div class="line-row"><code>RESULTS</code><span>List hasil dari SVM, IndoBERT, dan Hybrid.</span></div>
+                  <div class="line-row"><code>split == test</code><span>Hanya hasil test final yang masuk ringkasan utama.</span></div>
+                  <div class="line-row"><code>sort_values(f1)</code><span>Model diurutkan berdasarkan F1 tertinggi.</span></div>
+                </div>
+              </div>
+              <div class="callout amber"><strong>Interpretasi aman</strong><p>Hybrid mengungguli SVM klasik, tetapi IndoBERT classifier murni menjadi pembanding terbaik pada split test ini.</p></div>
+            </div>
+          </details>
+
+          <details class="cell-card" data-keywords="cell 15 artifact save checkpoint tokenizer preprocessing zip output">
+            <summary class="cell-summary">
+              <span class="cell-index">Cell 15</span>
+              <span class="cell-title">
+                <strong>Simpan artifact training</strong>
+                <span>Menyimpan checkpoint, tokenizer, split data, config, hasil evaluasi, dan zip output.</span>
+              </span>
+              <span class="cell-status">exec 17</span>
+            </summary>
+            <div class="cell-body">
+              <div class="explain-grid">
+                <div class="code-card">
+                  <div class="code-head">
+                    <span>kode inti</span>
+                    <button class="copy-button" type="button">Copy</button>
+                  </div>
+                  <pre><code>OUTPUT_DIR = Path("/kaggle/working/scam_hybrid_indobert_bilstm")
+tokenizer.save_pretrained(OUTPUT_DIR / "tokenizer")
+results_df.to_csv(OUTPUT_DIR / "all_training_results.csv", index=False)
+summary_df.to_csv(OUTPUT_DIR / "test_summary.csv", index=False)
+torch.save(hybrid_checkpoint, OUTPUT_DIR / "hybrid_indobert_bilstm_scam_final.pth")
+zip_path = shutil.make_archive(str(OUTPUT_DIR), "zip", OUTPUT_DIR)</code></pre>
+                </div>
+                <div class="line-map">
+                  <div class="line-row"><code>OUTPUT_DIR</code><span>Folder final yang akan muncul di Kaggle Output.</span></div>
+                  <div class="line-row"><code>save_pretrained</code><span>Menyimpan tokenizer agar inference lokal memakai vocab yang sama.</span></div>
+                  <div class="line-row"><code>torch.save</code><span>Menyimpan state_dict, threshold, config, dan label mapping.</span></div>
+                  <div class="line-row"><code>make_archive</code><span>Membuat zip agar artifact mudah diunduh dari Kaggle.</span></div>
+                </div>
+              </div>
+              <div class="callout green"><strong>Output penting</strong><p>Folder artifact berisi checkpoint Hybrid, checkpoint IndoBERT, tokenizer, preprocessing config, split CSV, dan hasil evaluasi.</p></div>
+            </div>
+          </details>
+
+          <details class="cell-card" data-keywords="cell 16 predict inference example scam normal probability threshold">
+            <summary class="cell-summary">
+              <span class="cell-index">Cell 16</span>
+              <span class="cell-title">
+                <strong>Fungsi prediksi teks baru</strong>
+                <span>Menguji model Hybrid pada contoh pesan scam dan pesan normal.</span>
+              </span>
+              <span class="cell-status">exec 18</span>
+            </summary>
+            <div class="cell-body">
+              <div class="explain-grid">
+                <div class="code-card">
+                  <div class="code-head">
+                    <span>kode inti</span>
+                    <button class="copy-button" type="button">Copy</button>
+                  </div>
+                  <pre><code>def predict_scam(text, model=None, threshold=None):
+    model.eval()
+    cleaned = clean_text(text)
+    encoding = tokenizer(
+        cleaned,
+        truncation=True,
+        padding="max_length",
+        max_length=CONFIG["max_length"],
+        return_tensors="pt",
+    )
+    with torch.no_grad():
+        logits = model(input_ids=input_ids, attention_mask=attention_mask)
+        prob = logits_to_positive_probs(logits).item()
+    label = "SCAM/SPAM" if prob >= threshold else "NORMAL/HAM"</code></pre>
+                </div>
+                <div class="line-map">
+                  <div class="line-row"><code>model.eval()</code><span>Menonaktifkan dropout agar prediksi stabil.</span></div>
+                  <div class="line-row"><code>clean_text</code><span>Input baru dibersihkan dengan aturan yang sama seperti training.</span></div>
+                  <div class="line-row"><code>torch.no_grad</code><span>Inference tidak menghitung gradient, jadi lebih ringan.</span></div>
+                  <div class="line-row"><code>prob >= threshold</code><span>Jika probabilitas scam melewati 0.68, label menjadi `SCAM/SPAM`.</span></div>
+                </div>
+              </div>
+              <div class="grid two">
+                <div class="callout red"><strong>Contoh scam</strong><p>Hadiah 100 juta + biaya admin menghasilkan probabilitas scam 95.59%.</p></div>
+                <div class="callout green"><strong>Contoh normal</strong><p>Diskusi tugas akhir di kampus menghasilkan probabilitas scam 2.11%.</p></div>
+              </div>
+            </div>
+          </details>
+        </div>
+      </section>
+
+      <section class="section" id="model">
+        <div class="section-header">
+          <div>
+            <div class="mini-label">Arsitektur</div>
+            <h2>Peran setiap model</h2>
+            <p class="section-intro">
+              Tiga pendekatan digunakan agar laporan punya pembanding yang kuat: baseline klasik, baseline deep learning,
+              dan model utama sesuai proposal.
+            </p>
+          </div>
+        </div>
+
+        <div class="grid three">
+          <div class="model-card">
+            <div class="model-top">
+              <h3>SVM TF-IDF</h3>
+              <span class="score">F1 95.74%</span>
+            </div>
+            <p>Baseline klasik. Teks diubah menjadi fitur TF-IDF, lalu diklasifikasikan dengan Linear SVM.</p>
+            <div class="bars">
+              <div class="bar"><span>Accuracy</span><span class="bar-track"><span class="bar-fill" style="--w:95.65%"></span></span><span>95.65%</span></div>
+              <div class="bar"><span>Precision</span><span class="bar-track"><span class="bar-fill" style="--w:93.75%"></span></span><span>93.75%</span></div>
+              <div class="bar"><span>Recall</span><span class="bar-track"><span class="bar-fill" style="--w:97.83%"></span></span><span>97.83%</span></div>
+            </div>
+          </div>
+
+          <div class="model-card">
+            <div class="model-top">
+              <h3>IndoBERT Classifier</h3>
+              <span class="score">F1 98.92%</span>
+            </div>
+            <p>Baseline deep learning. Embedding `[CLS]` dari IndoBERT langsung masuk ke classifier 2 kelas.</p>
+            <div class="bars">
+              <div class="bar"><span>Accuracy</span><span class="bar-track"><span class="bar-fill" style="--w:98.91%"></span></span><span>98.91%</span></div>
+              <div class="bar"><span>Precision</span><span class="bar-track"><span class="bar-fill" style="--w:97.87%"></span></span><span>97.87%</span></div>
+              <div class="bar"><span>Recall</span><span class="bar-track"><span class="bar-fill" style="--w:100%"></span></span><span>100%</span></div>
+            </div>
+          </div>
+
+          <div class="model-card">
+            <div class="model-top">
+              <h3>Hybrid IndoBERT BiLSTM</h3>
+              <span class="score">F1 97.83%</span>
+            </div>
+            <p>Model utama. IndoBERT membaca konteks, BiLSTM membaca urutan, attention memilih informasi penting.</p>
+            <div class="bars">
+              <div class="bar"><span>Accuracy</span><span class="bar-track"><span class="bar-fill" style="--w:97.83%"></span></span><span>97.83%</span></div>
+              <div class="bar"><span>Precision</span><span class="bar-track"><span class="bar-fill" style="--w:97.83%"></span></span><span>97.83%</span></div>
+              <div class="bar"><span>Recall</span><span class="bar-track"><span class="bar-fill" style="--w:97.83%"></span></span><span>97.83%</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="hasil">
+        <div class="section-header">
+          <div>
+            <div class="mini-label">Evaluasi akhir</div>
+            <h2>Hasil test split</h2>
+            <p class="section-intro">
+              Test split berisi 92 data yang tidak dipakai untuk training. Karena kelasnya seimbang, hasil test mudah
+              dijelaskan ke dosen: performa tinggi bukan akibat dominasi salah satu kelas.
+            </p>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
             <thead>
               <tr>
                 <th>Model</th>
@@ -509,104 +2276,1086 @@
                 <th>Precision</th>
                 <th>Recall</th>
                 <th>F1</th>
+                <th>ROC-AUC</th>
+                <th>Threshold</th>
               </tr>
             </thead>
             <tbody>
-              <tr><td>IndoBERT Classifier</td><td>98.91%</td><td>97.87%</td><td>100.00%</td><td>98.92%</td></tr>
-              <tr><td>Hybrid IndoBERT+BiLSTM</td><td>97.83%</td><td>97.83%</td><td>97.83%</td><td>97.83%</td></tr>
-              <tr><td>SVM TF-IDF</td><td>95.65%</td><td>93.75%</td><td>97.83%</td><td>95.74%</td></tr>
+              <tr>
+                <td>IndoBERT Classifier</td>
+                <td>98.91%</td>
+                <td>97.87%</td>
+                <td>100.00%</td>
+                <td>98.92%</td>
+                <td>100.00%</td>
+                <td>0.75</td>
+              </tr>
+              <tr>
+                <td>Hybrid IndoBERT BiLSTM</td>
+                <td>97.83%</td>
+                <td>97.83%</td>
+                <td>97.83%</td>
+                <td>97.83%</td>
+                <td>99.39%</td>
+                <td>0.68</td>
+              </tr>
+              <tr>
+                <td>SVM TF-IDF</td>
+                <td>95.65%</td>
+                <td>93.75%</td>
+                <td>97.83%</td>
+                <td>95.74%</td>
+                <td>-</td>
+                <td>0.50</td>
+              </tr>
             </tbody>
           </table>
         </div>
-      </section>
+        <p class="table-note">
+          Narasi paling aman: Hybrid berhasil melampaui baseline klasik SVM, sedangkan IndoBERT classifier murni
+          menjadi pembanding terbaik pada eksperimen ini.
+        </p>
 
-      <section class="section" id="demo">
-        <div class="section-header">
-          <div>
-            <h2>Preview Prediksi</h2>
-            <div class="muted">Preview static. Prediksi aktual memakai Streamlit dan checkpoint lokal.</div>
+        <div class="grid three" style="margin-top:14px">
+          <div class="card">
+            <h3>Precision</h3>
+            <p>Jika model berkata scam, precision tinggi berarti tuduhan itu jarang salah.</p>
+          </div>
+          <div class="card">
+            <h3>Recall</h3>
+            <p>Jika ada scam asli, recall tinggi berarti model cenderung berhasil menangkapnya.</p>
+          </div>
+          <div class="card">
+            <h3>F1</h3>
+            <p>F1 dipakai sebagai metrik utama karena menyeimbangkan precision dan recall.</p>
           </div>
         </div>
-        <div class="demo">
+      </section>
+
+      <section class="section" id="hasil-ke-ui">
+        <div class="section-header">
           <div>
-            <textarea id="message">Selamat Anda memenangkan hadiah 100 juta. Transfer biaya admin ke rekening 1234 sekarang.</textarea>
-            <div class="actions" style="margin-top:10px;">
-              <button class="button primary" type="button" id="previewButton">Preview Tampilan</button>
-              <button class="button" type="button" id="normalButton">Contoh Normal</button>
+            <div class="mini-label">Jalur hasil ke aplikasi</div>
+            <h2>Dari hasil training sampai tampil di UI</h2>
+            <p class="section-intro">
+              Setelah training selesai, hasilnya tidak langsung menjadi tampilan. Ada jalur data yang jelas:
+              Kaggle menyimpan artifact, project lokal membaca artifact, inference engine memproses input,
+              lalu Streamlit menampilkan hasil prediksi ke browser.
+            </p>
+          </div>
+        </div>
+
+        <div class="flow">
+          <div class="flow-node">
+            <div class="flow-number">1</div>
+            <h3>Training selesai</h3>
+            <p>Notebook menghasilkan metrik, threshold terbaik, checkpoint model, tokenizer, dan split data.</p>
+          </div>
+          <div class="flow-node">
+            <div class="flow-number">2</div>
+            <h3>Artifact disimpan</h3>
+            <p>Cell 15 menyimpan `.pth`, `tokenizer`, `preprocessing_config.json`, dan CSV evaluasi.</p>
+          </div>
+          <div class="flow-node">
+            <div class="flow-number">3</div>
+            <h3>Project lokal membaca</h3>
+            <p>`app/inference.py` memakai folder `hasil/scam_hybrid_indobert_bilstm` sebagai sumber model.</p>
+          </div>
+          <div class="flow-node">
+            <div class="flow-number">4</div>
+            <h3>Prediksi diproses</h3>
+            <p>Teks user dibersihkan, ditokenisasi, masuk model, lalu dibandingkan dengan threshold.</p>
+          </div>
+          <div class="flow-node">
+            <div class="flow-number">5</div>
+            <h3>UI menampilkan</h3>
+            <p>Streamlit menampilkan label, probabilitas scam, threshold, risk badge, clean text, dan JSON.</p>
+          </div>
+        </div>
+
+        <div class="grid two" style="margin-top:14px">
+          <div class="code-card">
+            <div class="code-head">
+              <span>Kaggle menyimpan hasil</span>
+              <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>results_df.to_csv(OUTPUT_DIR / "all_training_results.csv", index=False)
+summary_df.to_csv(OUTPUT_DIR / "test_summary.csv", index=False)
+
+torch.save(
+    hybrid_checkpoint,
+    OUTPUT_DIR / "hybrid_indobert_bilstm_scam_final.pth",
+)
+tokenizer.save_pretrained(OUTPUT_DIR / "tokenizer")</code></pre>
+          </div>
+
+          <div class="line-map">
+            <div class="line-row"><code>all_training_results.csv</code><span>Menyimpan riwayat metrik validation dan test dari semua model.</span></div>
+            <div class="line-row"><code>test_summary.csv</code><span>Menyimpan ringkasan akhir yang dipakai untuk laporan dan tampilan evaluasi.</span></div>
+            <div class="line-row"><code>hybrid_checkpoint</code><span>Berisi `state_dict`, threshold, config, label mapping, dan informasi arsitektur.</span></div>
+            <div class="line-row"><code>tokenizer</code><span>Disimpan agar inference lokal memakai tokenisasi yang sama dengan training.</span></div>
+          </div>
+        </div>
+
+        <div class="grid two" style="margin-top:14px">
+          <div class="code-card">
+            <div class="code-head">
+              <span>Streamlit membaca hasil evaluasi</span>
+              <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>SUMMARY_CSV = PROJECT_ROOT / "hasil" / "ringkasan_metrik_final.csv"
+ARTIFACT_MANIFEST = PROJECT_ROOT / "hasil" / "artifact_manifest.json"
+
+@st.cache_data(show_spinner=False)
+def load_summary_rows():
+    with SUMMARY_CSV.open(newline="", encoding="utf-8") as handle:
+        return list(csv.DictReader(handle))</code></pre>
+          </div>
+
+          <div class="line-map">
+            <div class="line-row"><code>ringkasan_metrik_final.csv</code><span>Sumber kartu evaluasi di sisi kanan UI Streamlit.</span></div>
+            <div class="line-row"><code>artifact_manifest.json</code><span>Sumber informasi artifact, dataset, split, config, dan file hasil training.</span></div>
+            <div class="line-row"><code>@st.cache_data</code><span>Data CSV/JSON dibaca sekali lalu disimpan sementara agar UI lebih cepat.</span></div>
+          </div>
+        </div>
+
+        <div class="callout green" style="margin-top:14px">
+          <strong>Inti alurnya</strong>
+          <p>Yang tampil di UI berasal dari dua sumber: metrik CSV untuk bagian evaluasi, dan checkpoint `.pth` untuk prediksi asli. Jadi UI bukan sekadar halaman tampilan, tetapi pintu masuk ke model lokal yang sudah dilatih.</p>
+        </div>
+      </section>
+
+      <section class="section" id="metode">
+        <div class="section-header">
+          <div>
+            <div class="mini-label">Peta penerapan metode</div>
+            <h2>Metode yang dipakai dan letaknya di kode</h2>
+            <p class="section-intro">
+              Bagian ini menjawab "metode diterapkan di mana". Setiap metode punya lokasi jelas:
+              sebagian di notebook Kaggle untuk training, sebagian di `app/inference.py` untuk prediksi lokal,
+              dan sebagian di `app/streamlit_app.py` untuk tampilan.
+            </p>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Metode / konsep</th>
+                <th>Lokasi penerapan</th>
+                <th>Tujuan</th>
+                <th>Hasil yang dipakai UI</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Label mapping biner</td>
+                <td>Notebook Cell 3, `preprocessing_config.json`</td>
+                <td>Mengubah `ham/spam` menjadi `0/1` agar model bisa belajar klasifikasi biner.</td>
+                <td>Label akhir `NORMAL/HAM` atau `SCAM/SPAM`.</td>
+              </tr>
+              <tr>
+                <td>Stratified split</td>
+                <td>Notebook Cell 4</td>
+                <td>Menjaga rasio normal dan scam tetap seimbang di train, validation, dan test.</td>
+                <td>Test 92 data dengan distribusi 46 normal dan 46 scam.</td>
+              </tr>
+              <tr>
+                <td>Preprocessing teks</td>
+                <td>Notebook Cell 5-6, `ScamInferenceEngine.clean_text()`</td>
+                <td>Lowercase, normalisasi URL/mention/hashtag, hapus simbol, pertahankan angka, normalisasi slang.</td>
+                <td>Kolom "Teks Setelah Preprocessing" di UI.</td>
+              </tr>
+              <tr>
+                <td>Tokenisasi IndoBERT</td>
+                <td>Notebook Cell 7, `BertTokenizerFast` di `app/inference.py`</td>
+                <td>Mengubah teks menjadi `input_ids` dan `attention_mask` sepanjang 128 token.</td>
+                <td>Input numerik yang dikirim ke model PyTorch.</td>
+              </tr>
+              <tr>
+                <td>TF-IDF + Linear SVM</td>
+                <td>Notebook Cell 9</td>
+                <td>Baseline klasik untuk membandingkan performa metode deep learning.</td>
+                <td>Metrik pembanding: F1 95.74%.</td>
+              </tr>
+              <tr>
+                <td>IndoBERT Classifier</td>
+                <td>Notebook Cell 10 dan 12, opsi model `indobert` di app</td>
+                <td>Baseline deep learning berbasis embedding `[CLS]` dari IndoBERT.</td>
+                <td>Opsi checkpoint pembanding di sidebar Streamlit.</td>
+              </tr>
+              <tr>
+                <td>Hybrid IndoBERT BiLSTM</td>
+                <td>Notebook Cell 10 dan 13, default `model_type="hybrid"`</td>
+                <td>Model utama: IndoBERT menangkap konteks, BiLSTM menangkap urutan, attention memilih token penting.</td>
+                <td>Prediksi utama UI dengan F1 test 97.83%.</td>
+              </tr>
+              <tr>
+                <td>Threshold tuning</td>
+                <td>Notebook Cell 8, checkpoint `.pth`, `self.threshold`</td>
+                <td>Memilih batas probabilitas terbaik berdasarkan F1 validation.</td>
+                <td>Angka threshold 0.68 yang tampil di hasil prediksi Hybrid.</td>
+              </tr>
+              <tr>
+                <td>Risk level</td>
+                <td>`_risk_level()` dan `risk_badge()`</td>
+                <td>Mengubah probabilitas menjadi kategori risiko yang mudah dibaca user.</td>
+                <td>Badge "Scam berisiko tinggi", "Scam perlu diwaspadai", atau "Normal".</td>
+              </tr>
+              <tr>
+                <td>Caching Streamlit</td>
+                <td>`@st.cache_resource` dan `@st.cache_data`</td>
+                <td>Menghindari model dan CSV dimuat ulang setiap interaksi.</td>
+                <td>UI terasa lebih cepat setelah model pertama kali dimuat.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="grid three" style="margin-top:14px">
+          <div class="card">
+            <h3>Training method</h3>
+            <p>Terjadi di Kaggle: split data, preprocessing, SVM, IndoBERT, Hybrid, evaluasi, dan simpan artifact.</p>
+          </div>
+          <div class="card">
+            <h3>Inference method</h3>
+            <p>Terjadi lokal: load checkpoint, clean text, tokenisasi, forward pass, probabilitas, threshold, output.</p>
+          </div>
+          <div class="card">
+            <h3>Presentation method</h3>
+            <p>Terjadi di Streamlit dan GitHub Pages: UI prediksi asli di Streamlit, modul belajar di halaman static.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="artifact">
+        <div class="section-header">
+          <div>
+            <div class="mini-label">Output training</div>
+            <h2>Artifact yang dipakai aplikasi</h2>
+            <p class="section-intro">
+              Artifact adalah bukti konkret hasil training. Folder ini yang dipakai inference lokal agar prediksi
+              berasal dari model terlatih, bukan simulasi browser.
+            </p>
+          </div>
+        </div>
+
+        <div class="grid two">
+          <div class="card">
+            <h3>Checkpoint utama</h3>
+            <p>`hasil/scam_hybrid_indobert_bilstm/hybrid_indobert_bilstm_scam_final.pth`, ukuran sekitar 513 MB.</p>
+          </div>
+          <div class="card">
+            <h3>Checkpoint pembanding</h3>
+            <p>`indobert_classifier_scam_baseline.pth`, ukuran sekitar 498 MB.</p>
+          </div>
+          <div class="card">
+            <h3>Tokenizer</h3>
+            <p>`tokenizer/tokenizer.json` dan `tokenizer_config.json` memastikan tokenisasi lokal sama dengan Kaggle.</p>
+          </div>
+          <div class="card">
+            <h3>Config dan split</h3>
+            <p>`preprocessing_config.json`, `train_split.csv`, `validation_split.csv`, `test_split.csv`, dan hasil evaluasi CSV.</p>
+          </div>
+        </div>
+
+        <div class="callout amber" style="margin-top:14px">
+          <strong>Kenapa file besar tidak cocok masuk GitHub biasa?</strong>
+          <p>Checkpoint `.pth` dan zip artifact ukurannya ratusan MB. Untuk sharing demo, lebih aman dikirim sebagai zip bersih atau lewat storage seperti Drive/OneDrive.</p>
+        </div>
+      </section>
+
+      <section class="section" id="inference">
+        <div class="section-header">
+          <div>
+            <div class="mini-label">Server-side model logic</div>
+            <h2>Cara inference lokal bekerja</h2>
+            <p class="section-intro">
+              File `app/inference.py` adalah jembatan antara artifact training dan UI. Ia memuat model PyTorch,
+              mengulang preprocessing yang sama, lalu menghasilkan prediksi.
+            </p>
+          </div>
+        </div>
+
+        <div class="timeline">
+          <div class="step">
+            <div class="step-dot">1</div>
+            <div>
+              <h3>Load dependency</h3>
+              <p>`torch`, `transformers`, dan komponen BERT dimuat. Jika belum ada, engine memberi pesan install requirements.</p>
             </div>
           </div>
-          <div class="result-panel">
-            <div class="result-title">Hasil Preview</div>
-            <div class="result-value" id="previewLabel">SCAM/SPAM</div>
-            <div class="muted" id="previewText">Static preview.</div>
-            <div class="tag bad" id="previewTag">risiko tinggi</div>
+          <div class="step">
+            <div class="step-dot">2</div>
+            <div>
+              <h3>Load artifact</h3>
+              <p>Engine membaca checkpoint Hybrid, tokenizer, threshold 0.68, dan preprocessing config.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-dot">3</div>
+            <div>
+              <h3>Rebuild arsitektur</h3>
+              <p>Arsitektur Hybrid dibangun ulang lokal, lalu `state_dict` dari checkpoint dimasukkan.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-dot">4</div>
+            <div>
+              <h3>Clean dan tokenize input</h3>
+              <p>Teks pengguna dibersihkan, dipotong/padding 128 token, lalu dikirim ke model.</p>
+            </div>
+          </div>
+          <div class="step">
+            <div class="step-dot">5</div>
+            <div>
+              <h3>Output prediksi</h3>
+              <p>Model mengeluarkan probabilitas scam. Jika `prob_scam >= threshold`, hasilnya `SCAM/SPAM`.</p>
+            </div>
           </div>
         </div>
-        <p class="note">
-          GitHub Pages hanya static. Prediksi asli berjalan lewat Streamlit.
-        </p>
+
+        <div class="grid two" style="margin-top:14px">
+          <div class="callout red">
+            <strong>Contoh scam tervalidasi</strong>
+            <p>"Selamat Anda memenangkan hadiah 100 juta..." menghasilkan `SCAM/SPAM`, prob_scam 95.59%, risiko tinggi.</p>
+          </div>
+          <div class="callout green">
+            <strong>Contoh normal tervalidasi</strong>
+            <p>"Besok kita kumpul jam 10 di kampus..." menghasilkan `NORMAL/HAM`, prob_scam 2.11%, risiko sangat rendah.</p>
+          </div>
+        </div>
+
+        <div class="grid two" style="margin-top:14px">
+          <div class="code-card">
+            <div class="code-head">
+              <span>Engine memuat artifact</span>
+              <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>self.preprocessing = json.loads(self.preprocessing_path.read_text())
+self.config = self.preprocessing["config"]
+self.slang_dict = self.preprocessing["slang_dict"]
+self.tokenizer = self.BertTokenizerFast(tokenizer_file=str(self.tokenizer_json))
+self.checkpoint = _load_checkpoint(self.torch, self.checkpoint_path)
+self.threshold = float(self.checkpoint.get("threshold", 0.5))
+self.model = self._build_model()
+self._load_state_dict()
+self.model.eval()</code></pre>
+          </div>
+
+          <div class="line-map">
+            <div class="line-row"><code>preprocessing_config</code><span>Menyambungkan aturan cleaning Kaggle ke aplikasi lokal.</span></div>
+            <div class="line-row"><code>tokenizer.json</code><span>Menyamakan tokenisasi saat training dan saat prediksi.</span></div>
+            <div class="line-row"><code>checkpoint_path</code><span>Memilih Hybrid atau IndoBERT sesuai dropdown Streamlit.</span></div>
+            <div class="line-row"><code>threshold</code><span>Nilai final dari validation dipakai untuk keputusan label.</span></div>
+            <div class="line-row"><code>model.eval()</code><span>Model masuk mode inference agar output stabil.</span></div>
+          </div>
+        </div>
+
+        <div class="grid two" style="margin-top:14px">
+          <div class="code-card">
+            <div class="code-head">
+              <span>Input user menjadi prediksi</span>
+              <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>clean_texts = [self.clean_text(text) for text in raw_texts]
+encoded = self.tokenizer(
+    clean_batch,
+    truncation=True,
+    padding="max_length",
+    max_length=self.max_length,
+    return_tensors="pt",
+)
+logits = self.model(input_ids=input_ids, attention_mask=attention_mask)
+probs = _positive_probs(self.torch, logits).detach().cpu().tolist()
+label_id = int(prob_value >= self.threshold)</code></pre>
+          </div>
+
+          <div class="line-map">
+            <div class="line-row"><code>clean_texts</code><span>Teks mentah user dibuat sama formatnya dengan data training.</span></div>
+            <div class="line-row"><code>tokenizer</code><span>Teks berubah menjadi tensor input untuk IndoBERT.</span></div>
+            <div class="line-row"><code>logits</code><span>Output mentah dari model sebelum menjadi probabilitas.</span></div>
+            <div class="line-row"><code>_positive_probs</code><span>Mengambil probabilitas kelas positif, yaitu scam/spam.</span></div>
+            <div class="line-row"><code>label_id</code><span>Keputusan akhir: di atas threshold berarti scam.</span></div>
+          </div>
+        </div>
       </section>
 
-      <section class="section" id="deploy">
+      <section class="section" id="kode-python">
         <div class="section-header">
           <div>
-            <h2>Alur Publikasi</h2>
-            <div class="muted">Source GitHub Pages: branch utama, folder `/docs`.</div>
+            <div class="mini-label">Bedah kode Python per baris</div>
+            <h2>Dari input user sampai output prediksi tampil</h2>
+            <p class="section-intro">
+              Bagian ini menjelaskan kode Python yang benar-benar bekerja saat demo dijalankan. Urutannya:
+              Streamlit menerima input, `app/inference.py` memuat artifact `.pth`, teks diproses oleh model,
+              lalu hasilnya dikembalikan ke UI Streamlit.
+            </p>
           </div>
         </div>
-        <div class="steps">
-          <div class="step">
-            <strong>1. Validasi inference</strong>
-            Jalankan script Hybrid.
+
+        <div class="callout green">
+          <strong>Kalimat mudahnya</strong>
+          <p>Kaggle membuat isi otak model. Folder artifact menyimpan isi otak itu. `app/inference.py` menjadi mesin prediksi. `app/streamlit_app.py` menjadi tampilan yang menerima teks dan menampilkan hasil.</p>
+        </div>
+
+        <div class="grid two" style="margin-top:14px">
+          <div class="code-card">
+            <div class="code-head">
+              <span>1. Streamlit mengambil mesin dari inference.py</span>
+              <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>from app.inference import DEFAULT_ARTIFACT_DIR, DependencyMissingError, load_engine
+
+@st.cache_resource(show_spinner=False)
+def get_engine(model_type: str, device: str):
+    return load_engine(DEFAULT_ARTIFACT_DIR, model_type=model_type, device=device)</code></pre>
           </div>
-          <div class="step">
-            <strong>2. Run Streamlit</strong>
-            Jalankan UI Python.
+
+          <div class="line-map">
+            <div class="line-row"><code>Baris 1</code><span>`streamlit_app.py` mengambil `DEFAULT_ARTIFACT_DIR`, error khusus dependency, dan fungsi `load_engine` dari `app/inference.py`.</span></div>
+            <div class="line-row"><code>Baris 3</code><span>`@st.cache_resource` menyimpan engine/model di memory Streamlit agar artifact `.pth` tidak dimuat ulang setiap tombol ditekan.</span></div>
+            <div class="line-row"><code>Baris 4</code><span>`get_engine()` menerima pilihan model dari sidebar, misalnya `hybrid` atau `indobert`, serta device `cpu` atau `auto`.</span></div>
+            <div class="line-row"><code>Baris 5</code><span>`load_engine(...)` memindahkan proses dari UI menuju `app/inference.py`, tempat artifact dibaca dan model disiapkan.</span></div>
           </div>
-          <div class="step">
-            <strong>3. Commit folder docs</strong>
-            Masukkan folder `docs/`.
+        </div>
+
+        <div class="grid two" style="margin-top:14px">
+          <div class="code-card">
+            <div class="code-head">
+              <span>2. UI menerima teks dari user</span>
+              <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>default_text = "Selamat Anda memenangkan hadiah 100 juta. Transfer biaya admin ke rekening 1234 sekarang."
+text = st.text_area("Teks pesan", value=default_text, height=150)
+run = st.button("Prediksi", type="primary", use_container_width=True)</code></pre>
           </div>
-          <div class="step">
-            <strong>4. Aktifkan Pages</strong>
-            Pilih branch utama dan folder `/docs`.
+
+          <div class="line-map">
+            <div class="line-row"><code>Baris 1</code><span>`default_text` hanya contoh awal agar halaman langsung punya teks demo ketika dibuka.</span></div>
+            <div class="line-row"><code>Baris 2</code><span>`st.text_area(...)` adalah kotak input. Teks yang diketik user disimpan ke variabel `text`.</span></div>
+            <div class="line-row"><code>Baris 3</code><span>`st.button("Prediksi")` membuat tombol. Saat tombol ditekan, variabel `run` bernilai benar.</span></div>
+          </div>
+        </div>
+
+        <div class="grid two" style="margin-top:14px">
+          <div class="code-card">
+            <div class="code-head">
+              <span>3. Tombol Prediksi memanggil engine</span>
+              <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>if run:
+    if not text.strip():
+        st.warning("Masukkan teks pesan terlebih dahulu.")
+    else:
+        with st.spinner("Memuat model dan menjalankan inference..."):
+            engine = get_engine(model_type, device)
+            result = engine.predict(text)</code></pre>
+          </div>
+
+          <div class="line-map">
+            <div class="line-row"><code>Baris 1</code><span>Kode di dalam blok ini hanya berjalan ketika tombol prediksi ditekan.</span></div>
+            <div class="line-row"><code>Baris 2</code><span>`text.strip()` mengecek apakah input kosong setelah spasi kiri-kanan dibuang.</span></div>
+            <div class="line-row"><code>Baris 3</code><span>Jika kosong, Streamlit menampilkan peringatan dan proses prediksi tidak dijalankan.</span></div>
+            <div class="line-row"><code>Baris 5</code><span>`st.spinner(...)` menampilkan indikator bahwa model sedang dimuat atau inference sedang berjalan.</span></div>
+            <div class="line-row"><code>Baris 6</code><span>`get_engine(model_type, device)` mengambil engine yang sudah siap, atau membuatnya jika belum pernah dimuat.</span></div>
+            <div class="line-row"><code>Baris 7</code><span>`engine.predict(text)` mengirim teks user ke `ScamInferenceEngine` di `app/inference.py`.</span></div>
+          </div>
+        </div>
+
+        <div class="grid two" style="margin-top:14px">
+          <div class="code-card">
+            <div class="code-head">
+              <span>4. load_engine membuat ScamInferenceEngine</span>
+              <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>PROJECT_ROOT = Path(__file__).resolve().parents[1]
+DEFAULT_ARTIFACT_DIR = PROJECT_ROOT / "hasil" / "scam_hybrid_indobert_bilstm"
+
+def load_engine(artifact_dir=DEFAULT_ARTIFACT_DIR, model_type="hybrid", device="cpu"):
+    return ScamInferenceEngine(artifact_dir=artifact_dir, model_type=model_type, device=device)</code></pre>
+          </div>
+
+          <div class="line-map">
+            <div class="line-row"><code>Baris 1</code><span>`PROJECT_ROOT` mencari root project dari lokasi file `app/inference.py`.</span></div>
+            <div class="line-row"><code>Baris 2</code><span>`DEFAULT_ARTIFACT_DIR` menunjuk ke folder artifact hasil training: `hasil/scam_hybrid_indobert_bilstm`.</span></div>
+            <div class="line-row"><code>Baris 4</code><span>`load_engine(...)` adalah pintu masuk dari Streamlit menuju engine prediksi.</span></div>
+            <div class="line-row"><code>Baris 5</code><span>`ScamInferenceEngine(...)` dibuat dengan lokasi artifact, jenis model, dan device yang dipilih.</span></div>
+          </div>
+        </div>
+
+        <div class="grid two" style="margin-top:14px">
+          <div class="code-card">
+            <div class="code-head">
+              <span>5. Engine memilih file .pth</span>
+              <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>self.artifact_dir = Path(artifact_dir)
+self.model_type = model_type
+
+if model_type == "hybrid":
+    self.checkpoint_path = self.artifact_dir / "hybrid_indobert_bilstm_scam_final.pth"
+elif model_type == "indobert":
+    self.checkpoint_path = self.artifact_dir / "indobert_classifier_scam_baseline.pth"</code></pre>
+          </div>
+
+          <div class="line-map">
+            <div class="line-row"><code>Baris 1</code><span>`artifact_dir` diubah menjadi objek `Path` supaya mudah digabung dengan nama file.</span></div>
+            <div class="line-row"><code>Baris 2</code><span>`model_type` menyimpan pilihan model dari sidebar Streamlit.</span></div>
+            <div class="line-row"><code>Baris 4</code><span>Jika user memilih Hybrid, engine memakai checkpoint utama Hybrid IndoBERT BiLSTM.</span></div>
+            <div class="line-row"><code>Baris 5</code><span>`checkpoint_path` menjadi path lengkap ke file `.pth` Hybrid.</span></div>
+            <div class="line-row"><code>Baris 6</code><span>Jika user memilih IndoBERT pembanding, engine memakai checkpoint baseline IndoBERT.</span></div>
+            <div class="line-row"><code>Baris 7</code><span>Path checkpoint diganti ke file `.pth` baseline IndoBERT.</span></div>
+          </div>
+        </div>
+
+        <div class="grid two" style="margin-top:14px">
+          <div class="code-card">
+            <div class="code-head">
+              <span>6. Artifact config, tokenizer, dan .pth dimuat</span>
+              <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>self.preprocessing = json.loads(self.preprocessing_path.read_text(encoding="utf-8"))
+self.config = self.preprocessing["config"]
+self.slang_dict = self.preprocessing["slang_dict"]
+self.max_length = int(self.config.get("max_length", 128))
+
+self.tokenizer = self.BertTokenizerFast(tokenizer_file=str(self.tokenizer_json))
+self.checkpoint = _load_checkpoint(self.torch, self.checkpoint_path)
+self.threshold = float(self.checkpoint.get("threshold", 0.5))
+self.architecture = str(self.checkpoint.get("architecture", ""))
+self.model = self._build_model()
+self._load_state_dict()
+self.model.to(self.device)
+self.model.eval()</code></pre>
+          </div>
+
+          <div class="line-map">
+            <div class="line-row"><code>Baris 1</code><span>Membaca `preprocessing_config.json` agar aturan cleaning lokal sama dengan aturan saat training Kaggle.</span></div>
+            <div class="line-row"><code>Baris 2</code><span>`config` berisi parameter seperti `max_length`, label, dan aturan preprocessing.</span></div>
+            <div class="line-row"><code>Baris 3</code><span>`slang_dict` dipakai untuk normalisasi kata singkatan atau istilah informal.</span></div>
+            <div class="line-row"><code>Baris 4</code><span>`max_length` menentukan panjang token maksimum. Di proyek ini default-nya 128.</span></div>
+            <div class="line-row"><code>Baris 6</code><span>`BertTokenizerFast` memuat tokenizer lokal dari artifact, bukan mengambil ulang dari internet.</span></div>
+            <div class="line-row"><code>Baris 7</code><span>`_load_checkpoint(...)` membaca file `.pth` dengan PyTorch.</span></div>
+            <div class="line-row"><code>Baris 8</code><span>`threshold` mengambil batas keputusan dari checkpoint. Jika tidak ada, fallback ke 0.5.</span></div>
+            <div class="line-row"><code>Baris 9</code><span>`architecture` menyimpan nama arsitektur model untuk metadata output.</span></div>
+            <div class="line-row"><code>Baris 10</code><span>`_build_model()` membangun ulang struktur model Python agar cocok dengan bobot di `.pth`.</span></div>
+            <div class="line-row"><code>Baris 11</code><span>`_load_state_dict()` memasukkan bobot hasil training ke model yang sudah dibangun ulang.</span></div>
+            <div class="line-row"><code>Baris 12</code><span>`model.to(self.device)` memindahkan model ke CPU/GPU sesuai device.</span></div>
+            <div class="line-row"><code>Baris 13</code><span>`model.eval()` mengaktifkan mode inference agar dropout tidak membuat hasil berubah-ubah.</span></div>
+          </div>
+        </div>
+
+        <div class="grid two" style="margin-top:14px">
+          <div class="code-card">
+            <div class="code-head">
+              <span>7. File .pth dibaca memakai torch.load</span>
+              <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>def _load_checkpoint(torch, checkpoint_path: Path):
+    try:
+        return torch.load(checkpoint_path, map_location="cpu", weights_only=False)
+    except TypeError:
+        return torch.load(checkpoint_path, map_location="cpu")</code></pre>
+          </div>
+
+          <div class="line-map">
+            <div class="line-row"><code>Baris 1</code><span>Fungsi menerima modul `torch` dan path file `.pth` yang akan dibaca.</span></div>
+            <div class="line-row"><code>Baris 2</code><span>`try` dipakai karena versi PyTorch berbeda bisa punya parameter `weights_only` atau tidak.</span></div>
+            <div class="line-row"><code>Baris 3</code><span>`torch.load(...)` membuka checkpoint dari disk dan memetakannya ke CPU agar aman di laptop tanpa GPU.</span></div>
+            <div class="line-row"><code>Baris 4</code><span>Jika PyTorch versi lama tidak mengenal `weights_only`, program masuk ke fallback.</span></div>
+            <div class="line-row"><code>Baris 5</code><span>Checkpoint tetap dimuat dengan `torch.load(...)`, hanya tanpa parameter `weights_only`.</span></div>
+          </div>
+        </div>
+
+        <div class="grid two" style="margin-top:14px">
+          <div class="code-card">
+            <div class="code-head">
+              <span>8. State dict dimasukkan ke model</span>
+              <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>state_dict = self.checkpoint.get("state_dict")
+if state_dict is None:
+    raise ValueError(f"Checkpoint tidak memiliki state_dict: {self.checkpoint_path}")
+
+missing, unexpected = self.model.load_state_dict(state_dict, strict=False)
+if important_missing or important_unexpected:
+    raise RuntimeError("State dict tidak cocok dengan arsitektur lokal.")</code></pre>
+          </div>
+
+          <div class="line-map">
+            <div class="line-row"><code>Baris 1</code><span>`state_dict` adalah bobot hasil training yang tersimpan di dalam `.pth`.</span></div>
+            <div class="line-row"><code>Baris 2</code><span>Program mengecek apakah checkpoint benar-benar punya bobot model.</span></div>
+            <div class="line-row"><code>Baris 3</code><span>Jika bobot tidak ada, program berhenti dengan error yang jelas.</span></div>
+            <div class="line-row"><code>Baris 5</code><span>`load_state_dict(...)` memasukkan bobot training ke arsitektur model lokal.</span></div>
+            <div class="line-row"><code>Baris 6</code><span>Program mengecek apakah ada layer penting yang hilang atau tidak cocok.</span></div>
+            <div class="line-row"><code>Baris 7</code><span>Jika arsitektur lokal tidak cocok dengan `.pth`, inference dihentikan agar hasil tidak salah.</span></div>
+          </div>
+        </div>
+
+        <div class="grid two" style="margin-top:14px">
+          <div class="code-card">
+            <div class="code-head">
+              <span>9. Teks user dibersihkan ulang</span>
+              <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>def clean_text(self, text: str) -&gt; str:
+    value = str(text).lower()
+    value = URL_PATTERN.sub(" link ", value)
+    value = MENTION_PATTERN.sub(" user ", value)
+    value = HASHTAG_PATTERN.sub(r"\1", value)
+    value = re.sub(r"[^a-z0-9\s]", " ", value)
+    words = []
+    for word in value.split():
+        word = normalize_repeated_chars(word)
+        word = self.slang_dict.get(word, word)
+        words.extend(word.split())
+    return REPEATED_SPACE_PATTERN.sub(" ", " ".join(words)).strip()</code></pre>
+          </div>
+
+          <div class="line-map">
+            <div class="line-row"><code>Baris 1</code><span>Fungsi `clean_text` menerima satu teks mentah dari user.</span></div>
+            <div class="line-row"><code>Baris 2</code><span>Teks diubah ke huruf kecil agar kapitalisasi tidak memengaruhi model.</span></div>
+            <div class="line-row"><code>Baris 3</code><span>URL diganti menjadi token `link`, karena link sering menjadi sinyal scam.</span></div>
+            <div class="line-row"><code>Baris 4</code><span>Mention akun diganti menjadi `user` agar nama akun tidak menjadi noise.</span></div>
+            <div class="line-row"><code>Baris 5</code><span>Tanda `#` pada hashtag dibuang, tetapi isi kata tetap dipertahankan.</span></div>
+            <div class="line-row"><code>Baris 6</code><span>Karakter selain huruf, angka, dan spasi dibuang. Angka tetap dipertahankan karena penting untuk nominal/rekening/kode.</span></div>
+            <div class="line-row"><code>Baris 7</code><span>`words` menampung kata hasil cleaning satu per satu.</span></div>
+            <div class="line-row"><code>Baris 8</code><span>Loop membaca setiap kata dari teks yang sudah dipisah spasi.</span></div>
+            <div class="line-row"><code>Baris 9</code><span>Huruf berulang ekstrem dinormalisasi, misalnya `hadiahhhh` menjadi lebih stabil.</span></div>
+            <div class="line-row"><code>Baris 10</code><span>Slang atau singkatan diganti menggunakan kamus dari artifact preprocessing.</span></div>
+            <div class="line-row"><code>Baris 11</code><span>Hasil normalisasi dimasukkan ke list kata final.</span></div>
+            <div class="line-row"><code>Baris 12</code><span>Kata digabung kembali, spasi berlebih dibersihkan, lalu teks siap ditokenisasi.</span></div>
+          </div>
+        </div>
+
+        <div class="grid two" style="margin-top:14px">
+          <div class="code-card">
+            <div class="code-head">
+              <span>10. Teks masuk tokenizer dan model PyTorch</span>
+              <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>def predict(self, text: str) -&gt; PredictionResult:
+    return self.predict_many([text])[0]
+
+clean_texts = [self.clean_text(text) for text in raw_texts]
+encoded = self.tokenizer(
+    clean_batch,
+    truncation=True,
+    padding="max_length",
+    max_length=self.max_length,
+    return_tensors="pt",
+)
+input_ids = encoded["input_ids"].to(self.device)
+attention_mask = encoded["attention_mask"].to(self.device)
+logits = self.model(input_ids=input_ids, attention_mask=attention_mask)
+probs = _positive_probs(self.torch, logits).detach().cpu().tolist()</code></pre>
+          </div>
+
+          <div class="line-map">
+            <div class="line-row"><code>Baris 1</code><span>`predict()` menerima satu teks dari Streamlit dan menjanjikan output berbentuk `PredictionResult`.</span></div>
+            <div class="line-row"><code>Baris 2</code><span>Teks tunggal dibungkus menjadi list, diproses oleh `predict_many`, lalu hasil pertama diambil.</span></div>
+            <div class="line-row"><code>Baris 4</code><span>Semua teks mentah dibersihkan menggunakan aturan `clean_text`.</span></div>
+            <div class="line-row"><code>Baris 5</code><span>`self.tokenizer(...)` mengubah teks bersih menjadi angka token yang bisa dibaca IndoBERT.</span></div>
+            <div class="line-row"><code>Baris 6</code><span>`clean_batch` adalah kumpulan teks bersih dalam satu batch.</span></div>
+            <div class="line-row"><code>Baris 7</code><span>`truncation=True` memotong teks yang terlalu panjang.</span></div>
+            <div class="line-row"><code>Baris 8</code><span>`padding="max_length"` menambah padding agar semua input panjangnya sama.</span></div>
+            <div class="line-row"><code>Baris 9</code><span>`max_length` mengikuti config training, yaitu 128 token.</span></div>
+            <div class="line-row"><code>Baris 10</code><span>`return_tensors="pt"` membuat output tokenizer menjadi tensor PyTorch.</span></div>
+            <div class="line-row"><code>Baris 12</code><span>`input_ids` adalah angka token yang masuk ke model.</span></div>
+            <div class="line-row"><code>Baris 13</code><span>`attention_mask` menandai token asli dan token padding.</span></div>
+            <div class="line-row"><code>Baris 14</code><span>`self.model(...)` menjalankan forward pass Hybrid IndoBERT BiLSTM atau IndoBERT baseline.</span></div>
+            <div class="line-row"><code>Baris 15</code><span>`_positive_probs(...)` mengubah output mentah model menjadi probabilitas scam/spam.</span></div>
+          </div>
+        </div>
+
+        <div class="grid two" style="margin-top:14px">
+          <div class="code-card">
+            <div class="code-head">
+              <span>11. Probabilitas menjadi label akhir</span>
+              <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>prob_value = float(prob)
+label_id = int(prob_value &gt;= self.threshold)
+prediction = "SCAM/SPAM" if label_id == 1 else "NORMAL/HAM"
+
+PredictionResult(
+    raw_text=raw_text,
+    clean_text=clean_text,
+    prediction=prediction,
+    label_id=label_id,
+    prob_scam=prob_value,
+    threshold=self.threshold,
+    risk_level=_risk_level(prob_value, self.threshold),
+    model=self.architecture or self.model_type,
+)</code></pre>
+          </div>
+
+          <div class="line-map">
+            <div class="line-row"><code>Baris 1</code><span>Probabilitas dari tensor/model diubah menjadi angka Python biasa.</span></div>
+            <div class="line-row"><code>Baris 2</code><span>Jika probabilitas lebih besar atau sama dengan threshold, label numeriknya menjadi `1`.</span></div>
+            <div class="line-row"><code>Baris 3</code><span>Label numerik diubah menjadi teks yang mudah dibaca: `SCAM/SPAM` atau `NORMAL/HAM`.</span></div>
+            <div class="line-row"><code>Baris 5</code><span>`PredictionResult(...)` adalah paket hasil akhir yang dikirim balik ke Streamlit.</span></div>
+            <div class="line-row"><code>Baris 6</code><span>`raw_text` menyimpan input asli sebelum preprocessing.</span></div>
+            <div class="line-row"><code>Baris 7</code><span>`clean_text` menyimpan teks setelah preprocessing.</span></div>
+            <div class="line-row"><code>Baris 8</code><span>`prediction` menyimpan label akhir dalam bentuk teks.</span></div>
+            <div class="line-row"><code>Baris 9</code><span>`label_id` menyimpan label angka: `0` normal, `1` scam.</span></div>
+            <div class="line-row"><code>Baris 10</code><span>`prob_scam` menyimpan skor keyakinan model terhadap kelas scam.</span></div>
+            <div class="line-row"><code>Baris 11</code><span>`threshold` disimpan agar UI bisa menjelaskan batas keputusan model.</span></div>
+            <div class="line-row"><code>Baris 12</code><span>`risk_level` membuat kategori risiko yang nanti dipakai untuk badge UI.</span></div>
+            <div class="line-row"><code>Baris 13</code><span>`model` menyimpan nama arsitektur yang menghasilkan prediksi.</span></div>
+          </div>
+        </div>
+
+        <div class="grid two" style="margin-top:14px">
+          <div class="code-card">
+            <div class="code-head">
+              <span>12. Streamlit menampilkan output ke browser</span>
+              <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>label, level = risk_badge(result)
+st.markdown(f'&lt;span class="badge {level}"&gt;{label}&lt;/span&gt;', unsafe_allow_html=True)
+
+c1, c2, c3 = st.columns(3)
+c1.markdown(f"Probabilitas Scam: {result.prob_scam:.2%}")
+c2.markdown(f"Threshold: {result.threshold:.2f}")
+c3.markdown(f"Prediksi: {result.prediction}")
+
+st.markdown(f'&lt;div class="clean-text"&gt;{escape(result.clean_text)}&lt;/div&gt;', unsafe_allow_html=True)
+with st.expander("Output JSON"):
+    st.json(asdict(result))</code></pre>
+          </div>
+
+          <div class="line-map">
+            <div class="line-row"><code>Baris 1</code><span>`risk_badge(result)` mengubah hasil model menjadi label badge dan level warna.</span></div>
+            <div class="line-row"><code>Baris 2</code><span>`st.markdown(...)` menampilkan badge status ke browser.</span></div>
+            <div class="line-row"><code>Baris 4</code><span>`st.columns(3)` membuat tiga kolom ringkas untuk metrik utama.</span></div>
+            <div class="line-row"><code>Baris 5</code><span>Kolom pertama menampilkan probabilitas scam dalam persen.</span></div>
+            <div class="line-row"><code>Baris 6</code><span>Kolom kedua menampilkan threshold keputusan model.</span></div>
+            <div class="line-row"><code>Baris 7</code><span>Kolom ketiga menampilkan label akhir prediksi.</span></div>
+            <div class="line-row"><code>Baris 9</code><span>Teks hasil preprocessing ditampilkan agar proses cleaning bisa dilihat user.</span></div>
+            <div class="line-row"><code>Baris 10</code><span>`st.expander(...)` membuat panel tambahan yang bisa dibuka-tutup.</span></div>
+            <div class="line-row"><code>Baris 11</code><span>`st.json(asdict(result))` menampilkan seluruh isi `PredictionResult` sebagai JSON.</span></div>
+          </div>
+        </div>
+
+        <div class="callout amber" style="margin-top:14px">
+          <strong>Kesimpulan alur kode</strong>
+          <p>`streamlit_app.py` tidak menghitung model sendiri. Ia hanya mengambil input, memanggil `engine.predict(text)`, lalu menampilkan `PredictionResult`. Proses beratnya ada di `app/inference.py`, terutama saat load `.pth`, tokenisasi, forward pass PyTorch, probabilitas, dan threshold.</p>
+        </div>
+      </section>
+
+      <section class="section" id="streamlit">
+        <div class="section-header">
+          <div>
+            <div class="mini-label">Browser UI vs model logic</div>
+            <h2>Peran UI Streamlit</h2>
+            <p class="section-intro">
+              Streamlit hanya menjadi antarmuka pengguna. Model tetap berjalan di Python melalui `app/inference.py`.
+              Jadi browser menampilkan form dan hasil, bukan menghitung IndoBERT sendiri.
+            </p>
+          </div>
+        </div>
+
+        <div class="grid three">
+          <div class="card">
+            <h3>Input pengguna</h3>
+            <p>Textarea menerima pesan bahasa Indonesia, lalu tombol prediksi memanggil inference engine.</p>
+          </div>
+          <div class="card">
+            <h3>Model selector</h3>
+            <p>Sidebar bisa memilih Hybrid IndoBERT BiLSTM atau IndoBERT Classifier, plus device CPU/auto.</p>
+          </div>
+          <div class="card">
+            <h3>Output</h3>
+            <p>UI menampilkan label, probabilitas scam, threshold, risk badge, clean text, dan JSON output.</p>
+          </div>
+        </div>
+
+        <div class="grid two" style="margin-top:14px">
+          <div class="code-card">
+            <div class="code-head">
+              <span>Model dimuat sekali oleh Streamlit</span>
+              <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>@st.cache_resource(show_spinner=False)
+def get_engine(model_type: str, device: str):
+    return load_engine(DEFAULT_ARTIFACT_DIR, model_type=model_type, device=device)
+
+model_type = st.selectbox(
+    "Checkpoint",
+    options=["hybrid", "indobert"],
+    format_func=model_label,
+)</code></pre>
+          </div>
+
+          <div class="line-map">
+            <div class="line-row"><code>@st.cache_resource</code><span>Model tidak dimuat ulang setiap user menekan tombol.</span></div>
+            <div class="line-row"><code>load_engine</code><span>Masuk ke `app/inference.py` dan membaca artifact model.</span></div>
+            <div class="line-row"><code>selectbox</code><span>User bisa memilih checkpoint Hybrid atau IndoBERT pembanding.</span></div>
+          </div>
+        </div>
+
+        <div class="grid two" style="margin-top:14px">
+          <div class="code-card">
+            <div class="code-head">
+              <span>Tombol prediksi menampilkan hasil</span>
+              <button class="copy-button" type="button">Copy</button>
+            </div>
+            <pre><code>if run:
+    engine = get_engine(model_type, device)
+    result = engine.predict(text)
+    label, level = risk_badge(result)
+
+    st.markdown(f'&lt;span class="badge {level}"&gt;{label}&lt;/span&gt;')
+    st.markdown(f'Probabilitas Scam: {result.prob_scam:.2%}')
+    st.markdown(f'Threshold: {result.threshold:.2f}')
+    st.markdown(f'Prediksi: {result.prediction}')</code></pre>
+          </div>
+
+          <div class="line-map">
+            <div class="line-row"><code>run</code><span>Bernilai benar setelah tombol prediksi ditekan.</span></div>
+            <div class="line-row"><code>engine.predict</code><span>Memanggil seluruh proses inference PyTorch.</span></div>
+            <div class="line-row"><code>risk_badge</code><span>Menerjemahkan hasil model ke bahasa UI yang mudah dibaca.</span></div>
+            <div class="line-row"><code>st.markdown</code><span>Menampilkan badge, probabilitas, threshold, dan label ke browser.</span></div>
           </div>
         </div>
       </section>
 
-      <footer>
-        Dibuat dari artifact training Kaggle: Hybrid IndoBERT+BiLSTM, IndoBERT baseline, tokenizer, dan preprocessing config.
-      </footer>
+      <section class="section" id="penutup">
+        <div class="section-header">
+          <div>
+            <div class="mini-label">Ringkasan akhir modul</div>
+            <h2>Yang harus dipahami dari proyek ini</h2>
+            <p class="section-intro">
+              Bagian ini merangkum seluruh modul menjadi peta pemahaman singkat. Fokusnya agar alur proyek
+              mudah dijelaskan kembali: dari dataset, training, artifact, inference lokal, sampai output di UI.
+            </p>
+          </div>
+        </div>
+
+        <div class="grid three">
+          <div class="card">
+            <h3>Tempat belajar model</h3>
+            <p>Kaggle menjalankan training, validasi, test, threshold tuning, dan menyimpan artifact `.pth`.</p>
+          </div>
+          <div class="card">
+            <h3>Tempat model bekerja</h3>
+            <p>Laptop lokal menjalankan `app/inference.py` untuk memuat artifact dan menghasilkan prediksi asli.</p>
+          </div>
+          <div class="card">
+            <h3>Tempat hasil dilihat</h3>
+            <p>Streamlit menampilkan input, probabilitas scam, threshold, label, clean text, dan JSON output.</p>
+          </div>
+        </div>
+
+        <div class="table-wrap" style="margin-top:14px">
+          <table>
+            <thead>
+              <tr>
+                <th>Bagian proyek</th>
+                <th>File / lokasi</th>
+                <th>Peran utama</th>
+                <th>Kalimat mudah</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Notebook training</td>
+                <td>`hasil/sms-spam.ipynb`</td>
+                <td>Melatih dan mengevaluasi SVM, IndoBERT, dan Hybrid IndoBERT BiLSTM.</td>
+                <td>Tempat model belajar dari dataset.</td>
+              </tr>
+              <tr>
+                <td>Dataset</td>
+                <td>`dataset/indo_spam.csv`</td>
+                <td>Sumber pesan normal dan scam/spam untuk training dan evaluasi.</td>
+                <td>Bahan mentah yang dipelajari model.</td>
+              </tr>
+              <tr>
+                <td>Artifact model</td>
+                <td>`hasil/scam_hybrid_indobert_bilstm/`</td>
+                <td>Menyimpan `.pth`, tokenizer, config preprocessing, split data, dan hasil evaluasi.</td>
+                <td>Isi otak model setelah training selesai.</td>
+              </tr>
+              <tr>
+                <td>Inference engine</td>
+                <td>`app/inference.py`</td>
+                <td>Memuat artifact, membersihkan teks, tokenisasi, forward pass PyTorch, threshold, dan output.</td>
+                <td>Mesin prediksi yang benar-benar menghitung hasil.</td>
+              </tr>
+              <tr>
+                <td>UI interaktif</td>
+                <td>`app/streamlit_app.py`</td>
+                <td>Menerima input user, memanggil engine, lalu menampilkan hasil prediksi.</td>
+                <td>Wajah aplikasi yang dipakai user.</td>
+              </tr>
+              <tr>
+                <td>Modul GitHub Pages</td>
+                <td>`docs/index.html`</td>
+                <td>Menjelaskan alur, metode, hasil, artifact, dan kode secara statis.</td>
+                <td>Buku panduan visual yang bisa dibuka dari HP.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="grid two" style="margin-top:14px">
+          <div class="card">
+            <h3>Urutan cerita 30 detik</h3>
+            <p>
+              Proyek ini mendeteksi pesan scam bahasa Indonesia. Data dibersihkan dan dibagi secara stratified,
+              lalu dibandingkan dengan SVM, IndoBERT, dan Hybrid IndoBERT BiLSTM. Training dilakukan di Kaggle,
+              hasilnya disimpan sebagai artifact, kemudian artifact dimuat oleh `app/inference.py` untuk prediksi
+              lokal dan hasilnya ditampilkan oleh Streamlit.
+            </p>
+          </div>
+          <div class="card">
+            <h3>Jawaban saat ditanya "modelnya jalan di mana?"</h3>
+            <p>
+              Model tidak berjalan di GitHub Pages. GitHub Pages hanya modul belajar statis. Prediksi asli berjalan
+              di laptop melalui Python, PyTorch, Transformers, dan Streamlit. File `.pth` dimuat oleh
+              `app/inference.py`, lalu UI hanya mengirim input dan menampilkan hasil.
+            </p>
+          </div>
+        </div>
+
+        <div class="grid two" style="margin-top:14px">
+          <div class="line-map">
+            <div class="line-row"><code>Artifact</code><span>Folder hasil training yang menyimpan checkpoint `.pth`, tokenizer, config, dan file evaluasi.</span></div>
+            <div class="line-row"><code>Checkpoint .pth</code><span>File PyTorch berisi bobot model, threshold, config, dan metadata arsitektur.</span></div>
+            <div class="line-row"><code>State dict</code><span>Bobot layer model yang dimasukkan kembali ke arsitektur lokal saat inference.</span></div>
+            <div class="line-row"><code>Tokenizer</code><span>Komponen yang mengubah teks menjadi token numerik agar bisa diproses IndoBERT.</span></div>
+          </div>
+          <div class="line-map">
+            <div class="line-row"><code>Logits</code><span>Output mentah model sebelum diubah menjadi probabilitas.</span></div>
+            <div class="line-row"><code>Prob_scam</code><span>Skor probabilitas bahwa pesan termasuk scam/spam.</span></div>
+            <div class="line-row"><code>Threshold</code><span>Batas keputusan. Jika probabilitas melewati threshold, label menjadi `SCAM/SPAM`.</span></div>
+            <div class="line-row"><code>Streamlit</code><span>Framework UI Python yang menerima input dan menampilkan hasil inference ke browser.</span></div>
+          </div>
+        </div>
+
+        <div class="callout green" style="margin-top:14px">
+          <strong>Kesimpulan final</strong>
+          <p>Modul ini sekarang mencakup dataset, cell Kaggle, metode, hasil evaluasi, artifact, alur `.pth`, inference lokal, kode Python per baris, dan hubungan hasil model ke UI. Jadi setelah ini fokus berikutnya bisa diarahkan ke penyempurnaan tampilan UI.</p>
+        </div>
+      </section>
+
+      <p class="footer">
+        Modul GitHub Pages untuk proyek deteksi scam bahasa Indonesia. Prediksi asli berjalan melalui Streamlit lokal.
+      </p>
     </main>
   </div>
 
   <script>
-    const message = document.getElementById('message');
-    const label = document.getElementById('previewLabel');
-    const text = document.getElementById('previewText');
-    const tag = document.getElementById('previewTag');
+    const body = document.body;
+    const menuToggle = document.getElementById("menuToggle");
+    const sidebar = document.getElementById("sidebar");
+    const navClose = document.getElementById("navClose");
+    const navLinks = Array.from(document.querySelectorAll(".nav a"));
+    const sections = navLinks
+      .map((link) => document.querySelector(link.getAttribute("href")))
+      .filter(Boolean);
+    const cellSearch = document.getElementById("cellSearch");
+    const cells = Array.from(document.querySelectorAll(".cell-card"));
 
-    function classifyPreview(value) {
-      const raw = value.toLowerCase();
-      const scamWords = ['hadiah', 'menang', 'rekening', 'transfer', 'admin', 'bonus', 'klik', 'link', 'pulsa'];
-      const score = scamWords.reduce((total, word) => total + (raw.includes(word) ? 1 : 0), 0);
-      if (score >= 2) {
-        label.textContent = 'SCAM/SPAM';
-        text.textContent = 'Static preview.';
-        tag.textContent = 'risiko tinggi';
-        tag.className = 'tag bad';
-      } else {
-        label.textContent = 'NORMAL/HAM';
-        text.textContent = 'Static preview.';
-        tag.textContent = 'risiko rendah';
-        tag.className = 'tag ok';
+    const preventZoom = (event) => {
+      if (event.touches && event.touches.length > 1) {
+        event.preventDefault();
       }
-    }
+    };
 
-    document.getElementById('previewButton').addEventListener('click', () => classifyPreview(message.value));
-    document.getElementById('normalButton').addEventListener('click', () => {
-      message.value = 'Besok kita kumpul jam 10 di kampus untuk diskusi tugas akhir.';
-      classifyPreview(message.value);
+    document.addEventListener("touchmove", preventZoom, { passive: false });
+    document.addEventListener("gesturestart", (event) => event.preventDefault(), { passive: false });
+    document.addEventListener("gesturechange", (event) => event.preventDefault(), { passive: false });
+    document.addEventListener("gestureend", (event) => event.preventDefault(), { passive: false });
+    document.addEventListener("wheel", (event) => {
+      if (event.ctrlKey) event.preventDefault();
+    }, { passive: false });
+
+    const setMenuOpen = (open) => {
+      body.classList.toggle("menu-open", open);
+      menuToggle?.setAttribute("aria-expanded", String(open));
+      sidebar?.setAttribute("aria-hidden", String(!open));
+    };
+
+    menuToggle?.addEventListener("click", () => {
+      setMenuOpen(!body.classList.contains("menu-open"));
+    });
+
+    navClose?.addEventListener("click", () => {
+      setMenuOpen(false);
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") setMenuOpen(false);
+    });
+
+    document.addEventListener("click", (event) => {
+      if (!body.classList.contains("menu-open")) return;
+      const target = event.target;
+      if (sidebar?.contains(target) || menuToggle?.contains(target)) return;
+      setMenuOpen(false);
+    });
+
+    navLinks.forEach((link) => {
+      link.addEventListener("click", () => {
+        setMenuOpen(false);
+      });
+    });
+
+    const observer = new IntersectionObserver((entries) => {
+      const visible = entries
+        .filter((entry) => entry.isIntersecting)
+        .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+      if (!visible) return;
+      navLinks.forEach((link) => {
+        link.classList.toggle("active", link.getAttribute("href") === `#${visible.target.id}`);
+      });
+    }, {
+      rootMargin: "-25% 0px -60% 0px",
+      threshold: [0.08, 0.18, 0.32]
+    });
+
+    sections.forEach((section) => observer.observe(section));
+
+    document.querySelectorAll(".copy-button").forEach((button) => {
+      button.addEventListener("click", async () => {
+        const card = button.closest(".code-card");
+        const code = card?.querySelector("code")?.innerText || "";
+        if (!code.trim()) return;
+        try {
+          await navigator.clipboard.writeText(code);
+          const old = button.textContent;
+          button.textContent = "Copied";
+          setTimeout(() => { button.textContent = old; }, 1200);
+        } catch {
+          button.textContent = "Copy failed";
+          setTimeout(() => { button.textContent = "Copy"; }, 1200);
+        }
+      });
+    });
+
+    document.querySelectorAll("[data-action]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const open = button.dataset.action === "open";
+        cells.forEach((cell) => {
+          if (!cell.classList.contains("hide")) {
+            cell.open = open;
+          }
+        });
+      });
+    });
+
+    cellSearch?.addEventListener("input", () => {
+      const query = cellSearch.value.trim().toLowerCase();
+      cells.forEach((cell) => {
+        const text = `${cell.textContent} ${cell.dataset.keywords || ""}`.toLowerCase();
+        const match = !query || text.includes(query);
+        cell.classList.toggle("hide", !match);
+        if (match && query) cell.open = true;
+      });
     });
   </script>
 </body>

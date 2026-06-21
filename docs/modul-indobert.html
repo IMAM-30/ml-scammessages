@@ -1,0 +1,1112 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Modul Cell 1-8 IndoBERT Scam Classifier</title>
+  <meta name="description" content="Modul belajar bertahap notebook IndoBERT scam classifier dari Cell 1 sampai Cell 8: dataset, preprocessing, tokenizer, DataLoader, logits, threshold, dan evaluasi.">
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f5f8f4;
+      --paper: #fffefa;
+      --panel: #ffffff;
+      --soft: #f8fbf7;
+      --ink: #162018;
+      --muted: #607067;
+      --line: #d9e3d6;
+      --accent: #147d74;
+      --accent-dark: #0f5e57;
+      --accent-soft: #e7f5f2;
+      --green: #247852;
+      --green-soft: #edf8f1;
+      --amber: #9b5a16;
+      --amber-soft: #fff4e2;
+      --code-bg: #13211c;
+      --code-line: #28443a;
+      --code-text: #eef8f2;
+      --radius: 8px;
+      --max: 1180px;
+      --shadow: 0 16px 38px rgba(26, 50, 34, 0.08);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+      scroll-padding-top: 82px;
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+    }
+
+    body {
+      margin: 0;
+      background:
+        linear-gradient(180deg, var(--paper) 0, #fbfcf8 270px, var(--bg) 720px),
+        linear-gradient(90deg, rgba(20, 125, 116, 0.04) 1px, transparent 1px);
+      background-size: auto, 44px 44px;
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.65;
+      letter-spacing: 0;
+      overflow-x: hidden;
+    }
+
+    a {
+      color: inherit;
+    }
+
+    code,
+    pre {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+    }
+
+    .skip-link {
+      position: absolute;
+      left: 16px;
+      top: -48px;
+      z-index: 10;
+      padding: 9px 12px;
+      border-radius: var(--radius);
+      background: var(--accent-dark);
+      color: #fff;
+      text-decoration: none;
+      font-weight: 800;
+    }
+
+    .skip-link:focus {
+      top: 14px;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      min-height: 64px;
+      padding: 10px max(18px, calc((100vw - var(--max)) / 2 + 18px));
+      border-bottom: 1px solid var(--line);
+      background: rgba(255, 254, 250, 0.92);
+      backdrop-filter: blur(16px);
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+      text-decoration: none;
+      font-weight: 900;
+    }
+
+    .brand-mark {
+      width: 36px;
+      height: 36px;
+      display: grid;
+      place-items: center;
+      border-radius: var(--radius);
+      background: #162018;
+      color: #fff;
+      font-size: 0.86rem;
+      flex: 0 0 auto;
+    }
+
+    .brand-text {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .topnav {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 7px;
+    }
+
+    .nav-link {
+      min-height: 34px;
+      display: inline-flex;
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.86);
+      padding: 6px 10px;
+      text-decoration: none;
+      color: var(--muted);
+      font-size: 0.84rem;
+      font-weight: 800;
+    }
+
+    .nav-link:hover,
+    .nav-link:focus-visible {
+      border-color: #b6dcd6;
+      color: var(--accent-dark);
+      outline: none;
+    }
+
+    .shell {
+      width: min(var(--max), calc(100vw - 32px));
+      margin: 0 auto;
+      padding: 28px 0 44px;
+    }
+
+    .hero,
+    .section,
+    .note {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.92);
+      box-shadow: var(--shadow);
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
+      gap: 18px;
+      padding: clamp(22px, 4vw, 40px);
+      align-items: stretch;
+    }
+
+    .eyebrow {
+      color: var(--accent-dark);
+      text-transform: uppercase;
+      font-size: 0.8rem;
+      letter-spacing: 0.06em;
+      font-weight: 900;
+      margin-bottom: 10px;
+    }
+
+    h1,
+    h2,
+    h3 {
+      color: var(--ink);
+      letter-spacing: 0;
+      line-height: 1.15;
+    }
+
+    h1 {
+      max-width: 820px;
+      margin: 0 0 14px;
+      font-size: clamp(2.2rem, 6vw, 4.6rem);
+      line-height: 1;
+      font-weight: 900;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: clamp(1.38rem, 3vw, 2rem);
+    }
+
+    h3 {
+      margin: 0 0 8px;
+      font-size: 1.02rem;
+    }
+
+    p {
+      margin: 0;
+    }
+
+    .lead {
+      max-width: 820px;
+      color: var(--muted);
+      font-size: 1.02rem;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 18px;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      min-height: 30px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #fff;
+      padding: 5px 10px;
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 850;
+    }
+
+    .chip.green {
+      border-color: #b9dfc8;
+      background: var(--green-soft);
+      color: var(--green);
+    }
+
+    .chip.blue {
+      border-color: #b7ded9;
+      background: var(--accent-soft);
+      color: var(--accent-dark);
+    }
+
+    .summary-panel {
+      display: grid;
+      gap: 10px;
+      align-content: center;
+      border: 1px solid #d5e1d2;
+      border-radius: var(--radius);
+      background: linear-gradient(160deg, #14241d 0%, #18392f 58%, #11201a 100%);
+      color: #edf8f1;
+      padding: 18px;
+      box-shadow: 0 20px 52px rgba(19, 33, 28, 0.18);
+    }
+
+    .panel-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.11);
+      padding-bottom: 9px;
+      font-size: 0.92rem;
+    }
+
+    .panel-row:last-child {
+      border-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .panel-badge {
+      white-space: nowrap;
+      border-radius: 999px;
+      background: rgba(237, 248, 241, 0.12);
+      color: #bdf0d2;
+      padding: 4px 8px;
+      font-size: 0.76rem;
+      font-weight: 900;
+    }
+
+    .section {
+      margin-top: 18px;
+      padding: clamp(18px, 3vw, 28px);
+      scroll-margin-top: 84px;
+      box-shadow: 0 8px 22px rgba(26, 50, 34, 0.055);
+    }
+
+    .section-head {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 16px;
+      align-items: end;
+      margin-bottom: 16px;
+    }
+
+    .section-intro {
+      max-width: 840px;
+      margin-top: 8px;
+      color: var(--muted);
+    }
+
+    .mini-label {
+      color: var(--muted);
+      font-size: 0.76rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-weight: 900;
+      margin-bottom: 6px;
+    }
+
+    .grid {
+      display: grid;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .grid.two {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .grid.three {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .card,
+    .cell-card,
+    .concept,
+    .flow-step {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--soft);
+      padding: 15px;
+      min-width: 0;
+    }
+
+    .card p,
+    .cell-card p,
+    .concept p,
+    .flow-step p {
+      color: var(--muted);
+      font-size: 0.94rem;
+    }
+
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .flow-step {
+      min-height: 150px;
+      background: #fff;
+      position: relative;
+    }
+
+    .flow-step::after {
+      content: "->";
+      position: absolute;
+      right: -12px;
+      top: 50%;
+      color: var(--muted);
+      font-weight: 900;
+      transform: translateY(-50%);
+    }
+
+    .flow-step:last-child::after {
+      content: "";
+    }
+
+    .step-num {
+      width: 28px;
+      height: 28px;
+      display: grid;
+      place-items: center;
+      border-radius: 999px;
+      background: var(--accent-dark);
+      color: #fff;
+      font-size: 0.8rem;
+      font-weight: 900;
+      margin-bottom: 9px;
+    }
+
+    .cell-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .cell-card {
+      background: rgba(255, 255, 255, 0.96);
+    }
+
+    .cell-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: start;
+      margin-bottom: 8px;
+    }
+
+    .cell-badge {
+      flex: 0 0 auto;
+      border-radius: 999px;
+      background: #17251f;
+      color: #fff;
+      padding: 5px 9px;
+      font-size: 0.78rem;
+      font-weight: 900;
+    }
+
+    .tag {
+      display: inline-flex;
+      margin-top: 10px;
+      min-height: 26px;
+      align-items: center;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      color: var(--accent-dark);
+      border: 1px solid #bbded8;
+      padding: 4px 8px;
+      font-size: 0.76rem;
+      font-weight: 900;
+    }
+
+    .note {
+      display: grid;
+      grid-template-columns: 42px 1fr;
+      gap: 12px;
+      align-items: start;
+      margin-top: 18px;
+      padding: 15px;
+      background: var(--amber-soft);
+      box-shadow: none;
+      border-color: #efd3a3;
+    }
+
+    .note-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: var(--radius);
+      display: grid;
+      place-items: center;
+      background: #fff;
+      color: var(--amber);
+      font-weight: 900;
+    }
+
+    .note strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .note p {
+      color: #5f4120;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fff;
+    }
+
+    table {
+      width: 100%;
+      min-width: 760px;
+      border-collapse: collapse;
+      font-size: 0.92rem;
+    }
+
+    th,
+    td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #e9efe6;
+      vertical-align: top;
+    }
+
+    th {
+      background: #f0f7ef;
+      color: var(--ink);
+      font-size: 0.76rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .code-card {
+      border: 1px solid var(--code-line);
+      border-radius: var(--radius);
+      background: var(--code-bg);
+      overflow: hidden;
+      box-shadow: 0 12px 28px rgba(18, 33, 28, 0.12);
+    }
+
+    .code-head {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--code-line);
+      color: #b8cabf;
+      font-size: 0.82rem;
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    pre {
+      margin: 0;
+      padding: 14px;
+      overflow-x: auto;
+      color: var(--code-text);
+      font-size: 0.84rem;
+      line-height: 1.55;
+    }
+
+    .line-map {
+      display: grid;
+      gap: 8px;
+    }
+
+    .line-row {
+      display: grid;
+      grid-template-columns: minmax(128px, 0.62fr) minmax(0, 1.38fr);
+      gap: 10px;
+      border: 1px solid #e5ece2;
+      border-radius: var(--radius);
+      background: #fff;
+      padding: 11px;
+      align-items: start;
+    }
+
+    .line-row code {
+      color: var(--accent-dark);
+      font-size: 0.84rem;
+      overflow-wrap: anywhere;
+    }
+
+    .line-row span {
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .footer {
+      margin: 30px 0 0;
+      color: var(--muted);
+      text-align: center;
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 980px) {
+      .hero,
+      .grid.two,
+      .grid.three,
+      .cell-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .flow {
+        grid-template-columns: 1fr;
+      }
+
+      .flow-step {
+        min-height: auto;
+      }
+
+      .flow-step::after {
+        content: "v";
+        right: 18px;
+        top: auto;
+        bottom: -16px;
+        transform: none;
+      }
+    }
+
+    @media (max-width: 680px) {
+      .topbar {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .topnav {
+        justify-content: flex-start;
+      }
+
+      .shell {
+        width: min(100vw - 24px, var(--max));
+        padding-top: 18px;
+      }
+
+      .hero,
+      .section {
+        padding: 17px;
+      }
+
+      .section-head {
+        grid-template-columns: 1fr;
+      }
+
+      .line-row,
+      .note {
+        grid-template-columns: 1fr;
+      }
+
+      pre {
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        font-size: 0.78rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main">Lewati ke konten</a>
+
+  <header class="topbar">
+    <a class="brand" href="index.html" aria-label="Kembali ke modul utama">
+      <span class="brand-mark">ML</span>
+      <span class="brand-text">Modul IndoBERT Cell 1-8</span>
+    </a>
+    <nav class="topnav" aria-label="Navigasi halaman">
+      <a class="nav-link" href="index.html">Modul Utama</a>
+      <a class="nav-link" href="#alur">Alur</a>
+      <a class="nav-link" href="#cell-map">Cell 1-8</a>
+      <a class="nav-link" href="#konsep-sulit">Konsep Sulit</a>
+      <a class="nav-link" href="#cell-8">Cell 8</a>
+    </nav>
+  </header>
+
+  <main class="shell" id="main">
+    <section class="hero" id="ringkasan">
+      <div>
+        <div class="eyebrow">Flush pembelajaran sampai Cell 8</div>
+        <h1>Notebook IndoBERT dari Data sampai Evaluasi</h1>
+        <p class="lead">
+          Halaman ini menyimpan hasil pemahaman bertahap dari sesi belajar notebook deteksi scam bahasa Indonesia.
+          Fokusnya bukan mengganti notebook, tetapi menjadi catatan GitHub Pages yang mudah dibaca ulang saat
+          menjelaskan alur proyek, fungsi penting, dan konsep yang sempat membingungkan.
+        </p>
+        <div class="chips" aria-label="Cakupan modul">
+          <span class="chip blue">Cell 1-8</span>
+          <span class="chip green">Dataset sampai evaluasi</span>
+          <span class="chip">Update bertahap</span>
+          <span class="chip">Siap dilanjut Cell 9</span>
+        </div>
+      </div>
+      <aside class="summary-panel" aria-label="Ringkasan status">
+        <div class="panel-row">
+          <span>Format dokumentasi</span>
+          <span class="panel-badge">GitHub Pages</span>
+        </div>
+        <div class="panel-row">
+          <span>Materi utama</span>
+          <span class="panel-badge">IndoBERT</span>
+        </div>
+        <div class="panel-row">
+          <span>Posisi belajar</span>
+          <span class="panel-badge">Cell 8</span>
+        </div>
+        <div class="panel-row">
+          <span>Tujuan halaman</span>
+          <span class="panel-badge">catatan belajar</span>
+        </div>
+      </aside>
+    </section>
+
+    <section class="section" id="alur">
+      <div class="section-head">
+        <div>
+          <div class="mini-label">Peta besar</div>
+          <h2>Alur yang sudah dipahami</h2>
+          <p class="section-intro">
+            Notebook bergerak dari data mentah, dirapikan, dibagi, dibersihkan, diubah menjadi format IndoBERT,
+            lalu disiapkan fungsi evaluasi untuk membaca performa model.
+          </p>
+        </div>
+      </div>
+
+      <div class="flow">
+        <div class="flow-step">
+          <div class="step-num">1</div>
+          <h3>Dataset</h3>
+          <p>Kolom pesan dan kategori diambil dari dataset, lalu dipilih sebagai teks dan label.</p>
+        </div>
+        <div class="flow-step">
+          <div class="step-num">2</div>
+          <h3>Label</h3>
+          <p>Label asli seperti spam dan ham dinormalisasi menjadi angka 1 dan 0.</p>
+        </div>
+        <div class="flow-step">
+          <div class="step-num">3</div>
+          <h3>Split</h3>
+          <p>Data dibagi menjadi train, validation, dan test dengan rasio 80/12/8.</p>
+        </div>
+        <div class="flow-step">
+          <div class="step-num">4</div>
+          <h3>Tokenisasi</h3>
+          <p>Clean text diubah menjadi input_ids dan attention_mask untuk IndoBERT.</p>
+        </div>
+        <div class="flow-step">
+          <div class="step-num">5</div>
+          <h3>Evaluasi</h3>
+          <p>Output model dibaca sebagai probabilitas, lalu dihitung metrik performanya.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="cell-map">
+      <div class="section-head">
+        <div>
+          <div class="mini-label">Cell penting</div>
+          <h2>Ringkasan Cell 1 sampai Cell 8</h2>
+          <p class="section-intro">
+            Ini peta cepat untuk mengingat fungsi tiap cell. Cell setelah ini akan ditambahkan ketika pembelajaran
+            sudah lanjut dan siap di-flush lagi.
+          </p>
+        </div>
+      </div>
+
+      <div class="cell-grid">
+        <article class="cell-card">
+          <div class="cell-top">
+            <h3>Setup, import, dan konfigurasi</h3>
+            <span class="cell-badge">Cell 1</span>
+          </div>
+          <p>Menyiapkan library, seed, device, nama model, panjang token, batch size, dan rasio split.</p>
+          <span class="tag">Fondasi notebook</span>
+        </article>
+
+        <article class="cell-card">
+          <div class="cell-top">
+            <h3>Load dataset</h3>
+            <span class="cell-badge">Cell 2</span>
+          </div>
+          <p>Membaca dataset dari Kaggle Input atau folder lokal. Semua proses berikutnya bergantung dari cell ini.</p>
+          <span class="tag">Sumber data</span>
+        </article>
+
+        <article class="cell-card">
+          <div class="cell-top">
+            <h3>Standardisasi kolom dan label</h3>
+            <span class="cell-badge">Cell 3</span>
+          </div>
+          <p>Memilih kolom teks dan label, lalu mengubah spam menjadi 1 serta ham menjadi 0.</p>
+          <span class="tag">Format target</span>
+        </article>
+
+        <article class="cell-card">
+          <div class="cell-top">
+            <h3>EDA singkat dan split</h3>
+            <span class="cell-badge">Cell 4</span>
+          </div>
+          <p>Membagi data menjadi train, validation, dan test. Test dipisahkan dulu, lalu sisa 92% dibagi train dan validation.</p>
+          <span class="tag">Train / validation / test</span>
+        </article>
+
+        <article class="cell-card">
+          <div class="cell-top">
+            <h3>Preprocessing teks</h3>
+            <span class="cell-badge">Cell 5</span>
+          </div>
+          <p>Membersihkan teks: lowercase, URL, mention, hashtag, simbol, slang, angka, huruf berulang, dan spasi.</p>
+          <span class="tag">Clean text</span>
+        </article>
+
+        <article class="cell-card">
+          <div class="cell-top">
+            <h3>Terapkan preprocessing</h3>
+            <span class="cell-badge">Cell 6</span>
+          </div>
+          <p>Fungsi clean_text diterapkan ke train_df, val_df, dan test_df. Hasilnya disimpan sebagai kolom clean_text.</p>
+          <span class="tag">Clean text per split</span>
+        </article>
+
+        <article class="cell-card">
+          <div class="cell-top">
+            <h3>Tokenizer dan Dataset PyTorch</h3>
+            <span class="cell-badge">Cell 7</span>
+          </div>
+          <p>Clean text dan label diubah menjadi Dataset, input_ids, attention_mask, labels, lalu dikumpulkan DataLoader.</p>
+          <span class="tag">Siap masuk model</span>
+        </article>
+
+        <article class="cell-card" id="cell-8">
+          <div class="cell-top">
+            <h3>Helper evaluasi</h3>
+            <span class="cell-badge">Cell 8</span>
+          </div>
+          <p>Menyiapkan fungsi untuk mengubah logits menjadi probabilitas, mengubah probabilitas menjadi prediksi, lalu menghitung metrik.</p>
+          <span class="tag">Nilai performa model</span>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" id="cell-3-4">
+      <div class="section-head">
+        <div>
+          <div class="mini-label">Cell 3 dan Cell 4</div>
+          <h2>Dari dataset mentah ke split data</h2>
+          <p class="section-intro">
+            Bagian ini adalah dasar sebelum model belajar. Tanpa label yang benar dan split yang jelas,
+            training dan evaluasi tidak bisa dipercaya.
+          </p>
+        </div>
+      </div>
+
+      <div class="grid two">
+        <div class="concept">
+          <h3>Cell 3 - detect_column</h3>
+          <p>
+            Fungsi ini mencari nama kolom yang cocok di dataset. Huruf kecil hanya dipakai untuk pencocokan,
+            bukan mengubah nama kolom asli. Contoh: kandidat pesan tetap cocok dengan kolom Pesan.
+          </p>
+        </div>
+        <div class="concept">
+          <h3>Cell 3 - normalize_label</h3>
+          <p>
+            Fungsi ini mengubah label asli menjadi target biner. Spam/scam menjadi 1, ham/normal menjadi 0,
+            lalu label disimpan sebagai integer agar bisa dipakai model.
+          </p>
+        </div>
+      </div>
+
+      <div class="grid two" style="margin-top:12px">
+        <div class="concept">
+          <h3>Cell 4 - split pertama</h3>
+          <p>
+            base_df dibagi menjadi train_val_df dan test_df. Test 8% diambil dulu sebagai data pengujian akhir.
+            Dari 1143 data, test menjadi sekitar 92 data dan sisanya 1051 data.
+          </p>
+        </div>
+        <div class="concept">
+          <h3>Cell 4 - split kedua</h3>
+          <p>
+            train_val_df dibagi lagi menjadi train_df dan val_df. Validation 12% dari total data dihitung
+            sebagai 13.04% dari sisa 92%, sehingga hasil akhirnya tetap sekitar 80/12/8.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="cell-5-6">
+      <div class="section-head">
+        <div>
+          <div class="mini-label">Cell 5 dan Cell 6</div>
+          <h2>Preprocessing dan penerapan ke semua split</h2>
+          <p class="section-intro">
+            Cell 5 mendefinisikan cara membersihkan teks. Cell 6 menerapkan fungsi itu ke train, validation,
+            dan test agar semuanya punya kolom clean_text yang konsisten.
+          </p>
+        </div>
+      </div>
+
+      <div class="grid three">
+        <div class="card">
+          <h3>SLANG_DICT</h3>
+          <p>Kamus normalisasi kata. Contoh: ga -> tidak, tf -> transfer, rek -> rekening, slmt -> selamat.</p>
+        </div>
+        <div class="card">
+          <h3>Regex pattern</h3>
+          <p>URL diganti link, mention diganti user, hashtag dibuka menjadi kata, dan spasi berulang dirapikan.</p>
+        </div>
+        <div class="card">
+          <h3>keep_numbers</h3>
+          <p>Jika True, angka tetap dipertahankan. Ini berguna untuk nominal hadiah, rekening, atau jumlah uang.</p>
+        </div>
+      </div>
+
+      <div class="code-card" style="margin-top:12px">
+        <div class="code-head">Cell 6 - pola yang sudah dipahami</div>
+        <pre><code>for split_df in [train_df, val_df, test_df]:
+    split_df["clean_text"] = split_df["text"].apply(clean_text)
+    empty_mask = split_df["clean_text"].str.len() == 0
+    split_df.loc[empty_mask, "clean_text"] = split_df.loc[empty_mask, "text"].astype(str).str.lower()</code></pre>
+      </div>
+
+      <div class="line-map" style="margin-top:12px">
+        <div class="line-row"><code>for split_df</code><span>Memproses train_df, val_df, dan test_df dengan satu pola yang sama.</span></div>
+        <div class="line-row"><code>apply(clean_text)</code><span>Mengubah setiap teks mentah menjadi teks bersih.</span></div>
+        <div class="line-row"><code>empty_mask</code><span>Mengecek hasil cleaning yang kosong.</span></div>
+        <div class="line-row"><code>loc[empty_mask]</code><span>Pengaman: jika clean_text kosong, gunakan teks asli versi lowercase.</span></div>
+      </div>
+    </section>
+
+    <section class="section" id="konsep-sulit">
+      <div class="section-head">
+        <div>
+          <div class="mini-label">Cell 7</div>
+          <h2>Tokenizer, Dataset, DataLoader</h2>
+          <p class="section-intro">
+            Ini bagian yang sempat paling rumit. Intinya: clean_text dan label diubah menjadi bentuk tensor
+            yang bisa dibaca IndoBERT dan PyTorch.
+          </p>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Bagian</th>
+              <th>Fungsi</th>
+              <th>Kalimat mudah</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>make_loader</code></td>
+              <td>Mengambil clean_text dan label dari DataFrame, lalu membuat Dataset dan DataLoader.</td>
+              <td>Jembatan dari tabel data ke batch PyTorch.</td>
+            </tr>
+            <tr>
+              <td><code>__init__</code></td>
+              <td>Menyimpan texts, labels, tokenizer, dan max_length ke dalam object Dataset.</td>
+              <td>Menaruh bahan-bahan agar siap dipakai nanti.</td>
+            </tr>
+            <tr>
+              <td><code>__len__</code></td>
+              <td>Mengembalikan jumlah data dalam Dataset.</td>
+              <td>Memberi tahu PyTorch dataset ini punya berapa data.</td>
+            </tr>
+            <tr>
+              <td><code>__getitem__</code></td>
+              <td>Mengambil satu data berdasarkan index, melakukan tokenisasi, lalu mengembalikan input_ids, attention_mask, dan labels.</td>
+              <td>Ambil satu sampel dan siapkan untuk model.</td>
+            </tr>
+            <tr>
+              <td><code>DataLoader</code></td>
+              <td>Mengumpulkan banyak output __getitem__ menjadi batch.</td>
+              <td>Mengubah banyak sampel menjadi paket training.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="grid two" style="margin-top:12px">
+        <div class="concept">
+          <h3>input_ids</h3>
+          <p>
+            Teks bersih diubah menjadi angka token. IndoBERT tidak membaca kalimat mentah, tetapi membaca
+            ID token dari tokenizer.
+          </p>
+        </div>
+        <div class="concept">
+          <h3>attention_mask</h3>
+          <p>
+            Penanda bagian mana yang token asli dan bagian mana yang padding. Angka 1 dibaca model,
+            angka 0 diabaikan karena hanya tambahan padding.
+          </p>
+        </div>
+      </div>
+
+      <div class="grid two" style="margin-top:12px">
+        <div class="concept">
+          <h3>padding dan max_length</h3>
+          <p>
+            Semua data dalam batch perlu panjang tensor yang sama. Teks pendek ditambah padding,
+            teks panjang dipotong oleh truncation, dan batasnya ditentukan max_length.
+          </p>
+        </div>
+        <div class="concept">
+          <h3>labels</h3>
+          <p>
+            Label adalah jawaban benar untuk data itu. Normal/ham bernilai 0, scam/spam bernilai 1.
+            Label dipakai saat model belajar dan saat evaluasi.
+          </p>
+        </div>
+      </div>
+
+      <div class="note">
+        <div class="note-icon">i</div>
+        <div>
+          <strong>Alur Cell 7 paling singkat</strong>
+          <p>
+            DataFrame -> make_loader -> ScamTextDataset -> __init__ menyimpan data -> __getitem__
+            mengambil satu data -> tokenizer membuat input_ids dan attention_mask -> DataLoader
+            menggabungkan banyak data menjadi batch.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="cell-8-detail">
+      <div class="section-head">
+        <div>
+          <div class="mini-label">Cell 8</div>
+          <h2>Evaluasi: logits, probabilitas, threshold, dan metrik</h2>
+          <p class="section-intro">
+            Cell 8 tidak melatih model. Cell ini membaca output prediksi model, mengubahnya menjadi keputusan,
+            lalu menghitung nilai performa.
+          </p>
+        </div>
+      </div>
+
+      <div class="code-card">
+        <div class="code-head">Alur besar evaluasi</div>
+        <pre><code>logits model
+-> logits_to_positive_probs()
+-> probabilitas scam/spam
+-> evaluate_binary()
+-> prediksi 0/1
+-> accuracy, precision, recall, f1, roc_auc
+-> RESULTS</code></pre>
+      </div>
+
+      <div class="grid three" style="margin-top:12px">
+        <div class="card">
+          <h3>RESULTS</h3>
+          <p>List kosong yang menjadi wadah hasil evaluasi tiap model dan tiap split.</p>
+        </div>
+        <div class="card">
+          <h3>logits_to_positive_probs</h3>
+          <p>Mengubah skor mentah model menjadi probabilitas kelas positif, yaitu scam/spam.</p>
+        </div>
+        <div class="card">
+          <h3>evaluate_binary</h3>
+          <p>Membandingkan prediksi dengan label asli, lalu menghitung metrik evaluasi.</p>
+        </div>
+      </div>
+
+      <div class="line-map" style="margin-top:12px">
+        <div class="line-row"><code>logits</code><span>Output mentah model sebelum menjadi probabilitas.</span></div>
+        <div class="line-row"><code>softmax</code><span>Dipakai kalau model memberi dua skor: normal dan scam.</span></div>
+        <div class="line-row"><code>sigmoid</code><span>Dipakai kalau model memberi satu skor untuk kelas scam.</span></div>
+        <div class="line-row"><code>threshold=0.5</code><span>Batas keputusan: probabilitas 0.5 ke atas menjadi scam, di bawahnya menjadi normal.</span></div>
+      </div>
+
+      <div class="table-wrap" style="margin-top:12px">
+        <table>
+          <thead>
+            <tr>
+              <th>Metrik</th>
+              <th>Pertanyaan yang dijawab</th>
+              <th>Makna mudah</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Accuracy</td>
+              <td>Berapa banyak prediksi benar dari semua data?</td>
+              <td>Ukuran benar secara umum.</td>
+            </tr>
+            <tr>
+              <td>Precision</td>
+              <td>Dari yang diprediksi scam, berapa yang benar scam?</td>
+              <td>Mengukur ketepatan alarm scam.</td>
+            </tr>
+            <tr>
+              <td>Recall</td>
+              <td>Dari semua scam asli, berapa yang berhasil ditemukan?</td>
+              <td>Mengukur kemampuan menangkap scam.</td>
+            </tr>
+            <tr>
+              <td>F1</td>
+              <td>Bagaimana keseimbangan precision dan recall?</td>
+              <td>Ringkasan performa yang lebih stabil untuk klasifikasi.</td>
+            </tr>
+            <tr>
+              <td>ROC AUC</td>
+              <td>Seberapa baik probabilitas membedakan dua kelas?</td>
+              <td>Menilai kualitas skor probabilitas model.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section" id="next">
+      <div class="section-head">
+        <div>
+          <div class="mini-label">Checkpoint pembelajaran</div>
+          <h2>Posisi saat ini dan rencana lanjut</h2>
+          <p class="section-intro">
+            Materi sampai Cell 8 sudah dipindahkan ke halaman ini. Jika pembelajaran lanjut ke Cell 9 dan seterusnya,
+            halaman ini bisa diperbarui tanpa mengubah format utama.
+          </p>
+        </div>
+      </div>
+
+      <div class="grid two">
+        <div class="card">
+          <h3>Sudah dipahami</h3>
+          <p>
+            Label biner, split data, preprocessing, clean_text, tokenizer, Dataset PyTorch, DataLoader,
+            input_ids, attention_mask, labels, logits, threshold, dan metrik evaluasi.
+          </p>
+        </div>
+        <div class="card">
+          <h3>Berikutnya</h3>
+          <p>
+            Cell 9 akan masuk ke baseline TF-IDF + Linear SVM. Bagian itu akan menjadi pembanding sebelum model
+            IndoBERT dan Hybrid dilatih.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <p class="footer">
+      Modul pembelajaran GitHub Pages. Notebook dan model asli tetap berada di project Python/Streamlit lokal.
+    </p>
+  </main>
+</body>
+</html>
